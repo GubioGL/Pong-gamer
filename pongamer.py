@@ -63,7 +63,7 @@ relogio = pg.time.Clock()
 logo    = pg.image.load("c:/Users/Oibug/Desktop/gubio/Outros/Criando jogos/Python/Pong gamer/logo_mini.jpg")
 fundo   = pg.image.load("c:/Users/Oibug/Desktop/gubio/Outros/Criando jogos/Python/Pong gamer/backgroud.jpg")
 pg.display.set_icon(logo)
-pg.display.set_caption('Pong')
+pg.display.set_caption(' Pong ')
 
 
 # configurando o tamanho da tela
