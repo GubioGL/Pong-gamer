@@ -2,7 +2,9 @@
 
 **Redes neurais quânticas de variáveis contínuas (CV-QNN) na base de Fock, em JAX.**
 
-Biblioteca pequena (≈ 420 linhas) para simular e treinar circuitos fotônicos com portas gaussianas **e Kerr** (não gaussiana), com `jax.jit`, `jax.vmap` e `jax.grad`. Ela foi feita para o projeto [Pong-gamer](../../README.md) (agentes quânticos em Pong e Snake), mas é independente: só depende de `jax` e `numpy`.
+Biblioteca pequena (≈ 420 linhas) para simular e treinar circuitos fotônicos com portas gaussianas **e Kerr** (não gaussiana), com `jax.jit`, `jax.vmap` e `jax.grad`. Ela foi feita para o projeto [Pong-gamer](https://github.com/GubioGL/Pong-gamer) (agentes quânticos em Pong e Snake), mas é independente: só depende de `jax` e `numpy`.
+
+Repositório: <https://github.com/GubioGL/cvjax>. O código é desenvolvido em `libs/cvjax` do Pong-gamer e publicado aqui com `git subtree`, mantendo o histórico.
 
 ## Por que existe
 
@@ -58,8 +60,16 @@ Com 3 modos, 4 camadas, entradas em [−1, 1] e escala 0,5, o vazamento é ≤ 1
 `examples/regressao_seno.py` usa a configuração do artigo de regressão: D(x)|0⟩ → [R S R D K] × 3 → ⟨x̂⟩, perda MSE, Adam. Ele chega a MSE ≈ 1,5e−5 em 800 passos (~6 s em CPU).
 
 ```bash
+pip install "cvjax @ git+https://github.com/GubioGL/cvjax"
+```
+Para desenvolver (testes e exemplos):
+```bash
+git clone https://github.com/GubioGL/cvjax && cd cvjax
+```
+```bash
 pip install -e ".[test,examples]"
 ```
+Os testes comparam com o PennyLane: use `pennylane==0.45.1` com `jax==0.7.1` (o PennyLane 0.45 não funciona com `jax>=0.8`).
 ```bash
 python examples/regressao_seno.py
 ```

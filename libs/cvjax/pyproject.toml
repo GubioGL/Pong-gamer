@@ -8,8 +8,11 @@ license = {text = "MIT"}
 authors = [{name = "Gubio G. de Lima"}]
 dependencies = ["jax>=0.4", "numpy"]
 
+[project.urls]
+Homepage = "https://github.com/GubioGL/cvjax"
+
 [project.optional-dependencies]
-test = ["pytest", "scipy", "pennylane", "thewalrus"]
+test = ["pytest", "scipy", "pennylane==0.45.1", "jax==0.7.1", "jaxlib==0.7.1", "thewalrus"]
 examples = ["optax"]
 
 [build-system]

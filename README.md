@@ -81,7 +81,7 @@ As curvas vão para `data/experimentos/<jogo>/<agente>/seed_<n>.csv` e as figura
 ```text
 ├── games/        pong/ e snake/: env.py (regras) + play.py (janela); retro.py (visual e sons)
 ├── src/          agentes/ (vqc, cvfock, cvqnn, mlp), rl/dqn.py, experimentos.py, paths.py
-├── libs/cvjax/   biblioteca CV-QNN na base de Fock em JAX (independente, pode virar repositório próprio)
+├── libs/cvjax/   biblioteca CV-QNN na base de Fock em JAX, publicada em github.com/GubioGL/cvjax
 ├── run/          scripts de treino e figuras + requirements.txt
 ├── data/         resultados dos experimentos (CSV)
 ├── paper/        artigo LaTeX (sincroniza com Overleaf) + references.bib
@@ -98,6 +98,17 @@ O projeto tem uma equipe de 12 subagentes e 12 skills (receita do projeto q-lear
 - `/maestro <pedido>`: divide o trabalho entre os agentes certos.
 - Skills do projeto: `criar-jogo-pygame`, `agente-quantico-variacional`, `comparar-quantico-classico`, `adicionar-referencia`, `registrar-atualizacao`, `checklist-de-commit`.
 - Skills externas: `pennylane`, `statistical-analysis`, `scientific-visualization`, `scientific-writing`, `peer-review`, `python-performance-optimization`.
+
+## Biblioteca cvjax
+
+`libs/cvjax` é desenvolvida aqui e publicada em <https://github.com/GubioGL/cvjax> com o histórico. Depois de mudar algo nela:
+
+```bash
+git subtree split --prefix=libs/cvjax -b cvjax-split
+```
+```bash
+git push https://github.com/GubioGL/cvjax cvjax-split:main
+```
 
 ## Testes
 

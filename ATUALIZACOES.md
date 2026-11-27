@@ -3,6 +3,12 @@
 O que mudou em cada commit, em linguagem simples, para quem acompanha o projeto.
 Mais recente em cima. Formato e regras: skill `registrar-atualizacao` (o agente `escriba` mantém este arquivo).
 
+## 2026-11-27 (4ª rodada): cvjax em repositório próprio
+
+| Commit | O que mudou | Arquivos principais |
+|---|---|---|
+| (este commit) | A biblioteca `cvjax` foi publicada em <https://github.com/GubioGL/cvjax> (branch `main`, com o histórico via `git subtree`). README dela com instalação pelo GitHub, versões fixadas para os testes e `.gitignore`. README do Pong-gamer explica como sincronizar. | `libs/cvjax/README.md`, `libs/cvjax/pyproject.toml`, `README.md` |
+
 ## 2026-11-27 (3ª rodada): rede CV com Kerr e biblioteca cvjax
 
 | Commit | O que mudou | Arquivos principais |
