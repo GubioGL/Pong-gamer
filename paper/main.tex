@@ -16,12 +16,15 @@
 \usepackage{amsmath,amssymb}
 \usepackage{bm}
 \usepackage{booktabs}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{xcolor}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{hyperref}
 
 \hypersetup{colorlinks=true, linkcolor=blue!50!black, citecolor=blue!50!black, urlcolor=blue!50!black}
 \graphicspath{{figures/}}              % figures written by run/*.py land in paper/figures/
+\setlength{\emergencystretch}{2em}  % lets lines with long \texttt names break without overflowing
 
 % Working notes: \showtodostrue -> \showtodosfalse hides every \TODO
 \newif\ifshowtodos \showtodostrue
@@ -144,7 +147,8 @@ Both games are pure Python, deterministic given a seed, and follow the
   \centering
   \caption{Observations, actions and rewards. All observations are scaled to $[-1,1]$.}
   \label{tab:envs}
-  \begin{tabular}{lll}
+  \small
+  \begin{tabular}{L{2.0cm}L{6.6cm}L{6.6cm}}
     \toprule
      & Pong & Snake ($12\times12$ grid) \\
     \midrule
@@ -188,7 +192,7 @@ Table~\ref{tab:params} their sizes and cost.
   \caption{Input and output of each Q-network. $n$ = observation size, $M$ = number of modes.}
   \label{tab:io}
   \small
-  \begin{tabular}{p{2.6cm}p{4.3cm}p{3.0cm}p{3.6cm}}
+  \begin{tabular}{L{2.4cm}L{4.6cm}L{3.2cm}L{4.4cm}}
     \toprule
     agent & input (encoding of $\bm x$) & quantum register & output $Q(\bm x,a)$ \\
     \midrule

@@ -3,6 +3,12 @@
 O que mudou em cada commit, em linguagem simples, para quem acompanha o projeto.
 Mais recente em cima. Formato e regras: skill `registrar-atualizacao` (o agente `escriba` mantém este arquivo).
 
+## 2026-11-27 (5ª rodada): artigo compilado
+
+| Commit | O que mudou | Arquivos principais |
+|---|---|---|
+| (este commit) | O artigo compila sem erros nem avisos (pdflatex + bibtex, 11 páginas). A tabela 1 saía da margem e passou a ter colunas fixas. O marcador "a conferir" das referências passou de `note` (que aparecia no PDF como "check") para `checknote`, que o BibTeX ignora; a regra no `CLAUDE.md` e nas skills foi atualizada. | `paper/main.tex`, `paper/references.bib`, `CLAUDE.md` |
+
 ## 2026-11-27 (4ª rodada): cvjax em repositório próprio
 
 | Commit | O que mudou | Arquivos principais |

@@ -53,6 +53,6 @@ MCP em `.mcp.json`: `context7` (documentação atual de PennyLane/JAX/optax/pyga
 ## Regras para todos
 1. Comparação justa: mesmo algoritmo, mesmo orçamento, várias sementes, nº de parâmetros reportado (skill `comparar-quantico-classico`).
 2. Nada de "vantagem quântica" sem evidência aprovada pelo `fisico-revisor`.
-3. Referências: nunca inventar DOI/volume/página; ◐ e `note = {check}` quando não confirmado.
+3. Referências: nunca inventar DOI/volume/página; ◐ e `checknote = {...}` (campo que o BibTeX ignora; não aparece no PDF) quando não confirmado.
 4. Mudou observação/ações/recompensa de um jogo? Resultados antigos em `data/` ficam inválidos: avisar.
 5. Todo commit entra em `ATUALIZACOES.md` (escriba, skill `registrar-atualizacao`).
