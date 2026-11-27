@@ -3,6 +3,12 @@
 O que mudou em cada commit, em linguagem simples, para quem acompanha o projeto.
 Mais recente em cima. Formato e regras: skill `registrar-atualizacao` (o agente `escriba` mantém este arquivo).
 
+## 2026-11-27 (6ª rodada): artigo com Material Suplementar
+
+| Commit | O que mudou | Arquivos principais |
+|---|---|---|
+| (este commit) | **Artigo reorganizado.** O corpo traz só as ideias: os jogos, o que cada agente faz, o fluxo do treino em 4 passos sem números, e os resultados (descrição qualitativa a escrever + gráficos). Todo o detalhe técnico foi para o **Supplementary Material** no fim (S1 máquina e software, S2 jogos, S3 modelos com camadas, registros, inicialização, taxas e nº de parâmetros, S4 simulação CV/cvjax, S5 algoritmo e hiperparâmetros, S6 estatística, S7 custo). As tabelas do suplemento são geradas do código (`run/tabelas_suplementares.py` → `paper/supp/`). Pontuações de referência dos jogadores por regra e aleatório agora vêm de script (`data/referencia/baselines.csv`), e a máquina da medição de custo é salva em `data/custo/maquina.json`. PDF: 14 páginas, sem erros nem avisos. | `paper/main.tex`, `paper/supp/`, `run/tabelas_suplementares.py`, `src/maquina.py` |
+
 ## 2026-11-27 (5ª rodada): artigo compilado
 
 | Commit | O que mudou | Arquivos principais |

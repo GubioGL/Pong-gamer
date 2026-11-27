@@ -1,6 +1,6 @@
 """Measure the cost of each agent: trainable parameters and time per DQN gradient step (CPU).
 
-    python run/medir_custo.py          # -> data/custo/custo_por_agente.csv
+    python run/medir_custo.py          # -> data/custo/custo_por_agente.csv + data/custo/maquina.json
 
 Real measurement (not a learning result): used by the cost figure of the paper.
 """
@@ -20,6 +20,7 @@ _os.chdir(_ROOT)
 # ---------------------------------------------------------------------------------
 
 import csv
+import json
 import platform
 import time
 
@@ -27,6 +28,7 @@ import jax
 import numpy as np
 
 from experimentos import AGENTS, GAMES, make_agent
+from maquina import machine_info
 from paths import DATA
 from rl.dqn import count_parameters, make_functions, make_optimizer
 
@@ -64,7 +66,8 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
-    print("saved", out.relative_to(_ROOT))
+    (out.parent / "maquina.json").write_text(json.dumps(machine_info(), indent=2))
+    print("saved", out.relative_to(_ROOT), "and maquina.json (computer used)")
 
 
 if __name__ == "__main__":

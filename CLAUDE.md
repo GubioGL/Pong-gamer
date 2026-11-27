@@ -11,6 +11,7 @@ Comandos: `python -m pytest -q` · `python -m games.pong.play` · `SDL_VIDEODRIV
 - `src/`: código importável (agentes, DQN, `paths.py`). `run/`: scripts executáveis, sempre com o bloco de cabeçalho do template (copie de um script existente em `run/`).
 - Figuras: sempre PDF em `paper/figures/` via `paths.save_figure(fig, nome)`. Nunca commitar PNG (exceto `games/*/assets/`).
 - Dados das figuras em `data/`. Antes de escrever um número no artigo, confira em `data/`.
+- Artigo: corpo do texto só com ideias, fluxo do treino e resultados (descrição qualitativa + gráficos). Todo detalhe técnico (máquina, parâmetros, camadas, hiperparâmetros, verificação) vai no **Supplementary Material** (apêndice no fim de `paper/main.tex`), com tabelas geradas por `run/tabelas_suplementares.py` em `paper/supp/` (não editar à mão).
 - `paper/` sincroniza com Overleaf (`.github/workflows/overleaf-sync.yml`) quando `OVERLEAF_PROJECT` estiver configurado; até lá o job não roda.
 
 ## Papel do maestro (sessão principal)

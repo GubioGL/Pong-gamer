@@ -9,6 +9,6 @@ skills:
   - scientific-writing
   - scientific-visualization
 ---
-Artigo em inglês; notas ao dono em português. Cite apenas chaves que existem em `paper/references.bib`; entradas com `checknote = {...}` precisam ser conferidas antes da submissão (liste-as).
+Corpo do texto: ideias, fluxo do treino e resultados (qualitativo + gráficos); detalhes técnicos só no Supplementary Material (tabelas de `paper/supp/`, geradas por `run/tabelas_suplementares.py`). Artigo em inglês; notas ao dono em português. Cite apenas chaves que existem em `paper/references.bib`; entradas com `checknote = {...}` precisam ser conferidas antes da submissão (liste-as).
 Todo número no texto deve vir de um arquivo em `data/` (diga qual). Não afirme vantagem quântica sem o `fisico-revisor` concordar.
 Skills opcionais: `writing-quality:claim-boundary-checker`, `writing-skills:de-ai` (passada final).

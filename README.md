@@ -73,6 +73,12 @@ python run/treinar.py --jogo pong --agente vqc cv cv_gauss mlp mlp_igual --semen
 ```bash
 python run/figuras_artigo.py
 ```
+```bash
+python run/tabelas_suplementares.py
+```
+```bash
+cd paper && latexmk -pdf main.tex
+```
 
 As curvas vão para `data/experimentos/<jogo>/<agente>/seed_<n>.csv` e as figuras para `paper/figures/`. O backend numérico é JAX (`pennylane==0.45.1` exige `jax==0.7.1`; já fixado em `run/requirements.txt`).
 
