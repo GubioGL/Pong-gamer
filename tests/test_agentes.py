@@ -5,6 +5,7 @@ jax = pytest.importorskip("jax")
 pytest.importorskip("pennylane")
 import jax.numpy as jnp  # noqa: E402
 
+from agentes.cvfock import CVFockQNet  # noqa: E402
 from agentes.cvqnn import CVQNet  # noqa: E402
 from agentes.mlp import MLPQNet, matched_mlp, mlp_parameters  # noqa: E402
 from agentes.vqc import QubitQNet  # noqa: E402
@@ -12,7 +13,8 @@ from rl.dqn import DQNConfig, count_parameters, train  # noqa: E402
 from games.pong import PongEnv  # noqa: E402
 
 
-@pytest.mark.parametrize("model", [MLPQNet(6, 3), QubitQNet(6, 3, layers=1), CVQNet(6, 3, layers=1)])
+@pytest.mark.parametrize("model", [MLPQNet(6, 3), QubitQNet(6, 3, layers=1), CVQNet(6, 3, layers=1),
+                                   CVFockQNet(6, 3, layers=1, cutoff=4)])
 def test_output_shape(model):
     p = model.init(jax.random.PRNGKey(0))
     q = jax.vmap(model.apply, (None, 0))(p, jnp.zeros((5, 6)))
@@ -48,3 +50,13 @@ def test_dqn_mlp_smoke(tmp_path):
                          seed=0, log_path=tmp_path / "seed_0.csv")
     assert len(hist) >= 1 and np.isfinite(hist[-1]["loss"])
     assert (tmp_path / "seed_0.csv").exists() and (tmp_path / "seed_0.json").exists()
+
+
+def test_cv_fock_agent_kerr_matters_and_leakage_small():
+    m = CVFockQNet(6, 3, layers=2, cutoff=6)
+    p = m.init(jax.random.PRNGKey(0))
+    x = jnp.array([1.0, -1.0, 1.0, -1.0, 1.0, -1.0])
+    assert float(m.leakage(p, x)) < 5e-3
+    p2 = dict(p, k=p["k"] + 0.3)
+    assert float(jnp.abs(m.apply(p2, x) - m.apply(p, x)).max()) > 1e-4
+    assert count_parameters(p) == 2 * 11 * 3 + 6 + 6     # 11 arrays x 3 modes per layer, scales, w, b

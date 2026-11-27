@@ -8,3 +8,4 @@ pennylane==0.45.1
 jax==0.7.1      # PennyLane 0.45.1 does not work with jax >= 0.8 (jax.core.is_concrete removed)
 jaxlib==0.7.1
 optax
+-e ./libs/cvjax  # CV QNN with Kerr in the Fock basis (our library; run pip from the repository root)

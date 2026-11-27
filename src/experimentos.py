@@ -4,6 +4,7 @@ Changing anything here invalidates results already saved in data/experimentos/.
 """
 from __future__ import annotations
 
+from agentes.cvfock import CVFockQNet
 from agentes.cvqnn import CVQNet
 from agentes.mlp import MLPQNet, matched_mlp
 from agentes.vqc import QubitQNet
@@ -12,6 +13,7 @@ from games.snake import SnakeEnv
 from rl.dqn import DQNConfig
 
 LAYERS = 4
+CUTOFF = 6        # Fock levels per mode of the CV agent (leakage <= ~1e-3 at initialization)
 
 GAMES = {
     # Pong episodes are short matches (3 points) so that agents see many episodes.
@@ -29,7 +31,9 @@ def make_agent(name, game):
     n, a = g["n_obs"], g["n_actions"]
     if name == "vqc":
         return QubitQNet(n, a, layers=LAYERS)
-    if name == "cv":
+    if name == "cv":                    # CV QNN with Kerr, Fock basis (cvjax)
+        return CVFockQNet(n, a, layers=LAYERS, cutoff=CUTOFF)
+    if name == "cv_gauss":              # Gaussian-only CV network (ablation: no Kerr)
         return CVQNet(n, a, layers=LAYERS)
     if name == "mlp_igual":            # same number of parameters as the qubit VQC
         import jax
@@ -41,4 +45,4 @@ def make_agent(name, game):
     raise ValueError(f"unknown agent {name!r}")
 
 
-AGENTS = ("mlp", "mlp_igual", "vqc", "cv")
+AGENTS = ("mlp", "mlp_igual", "vqc", "cv", "cv_gauss")

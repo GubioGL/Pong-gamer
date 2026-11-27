@@ -42,13 +42,14 @@ from paths import DATA, save_figure
 
 # Fixed categorical order (validated: CVD-safe; contrast WARN -> every series also has
 # a direct label, its own line style and marker).
-AGENTS = ["mlp", "mlp_igual", "vqc", "cv"]
+AGENTS = ["mlp", "mlp_igual", "vqc", "cv", "cv_gauss"]
 LABEL = {"mlp": "MLP 2x64", "mlp_igual": "MLP (same #params as VQC)",
-         "vqc": "Qubit VQC", "cv": "CV QNN (Gaussian)"}
-SHORT = {"mlp": "MLP 2x64", "mlp_igual": "MLP small", "vqc": "Qubit VQC", "cv": "CV QNN"}
-COLOR = {"mlp": "#257de0", "mlp_igual": "#f47230", "vqc": "#00b894", "cv": "#f2a600"}
-STYLE = {"mlp": "-", "mlp_igual": "--", "vqc": "-.", "cv": ":"}
-MARKER = {"mlp": "o", "mlp_igual": "s", "vqc": "^", "cv": "D"}
+         "vqc": "Qubit VQC", "cv": "CV QNN (Kerr, Fock)", "cv_gauss": "CV Gaussian (no Kerr)"}
+SHORT = {"mlp": "MLP 2x64", "mlp_igual": "MLP small", "vqc": "Qubit VQC", "cv": "CV QNN",
+         "cv_gauss": "CV Gauss"}
+COLOR = {"mlp": "#257de0", "mlp_igual": "#f47230", "vqc": "#00b894", "cv": "#f2a600", "cv_gauss": "#ee7fac"}
+STYLE = {"mlp": "-", "mlp_igual": "--", "vqc": "-.", "cv": ":", "cv_gauss": (0, (1, 1, 4, 1))}
+MARKER = {"mlp": "o", "mlp_igual": "s", "vqc": "^", "cv": "D", "cv_gauss": "v"}
 INK, INK2, GRID = "#191919", "#666666", "#e6e6e6"
 
 plt.rcParams.update({
@@ -72,9 +73,10 @@ def spread_labels(ys, min_gap):
 
 def bottom_legend(fig, ax):
     handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=len(labels), frameon=False,
+    ncol = len(labels) if len(labels) <= 4 else 3
+    fig.legend(handles, labels, loc="lower center", ncol=ncol, frameon=False,
                bbox_to_anchor=(0.5, -0.02))
-    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.tight_layout(rect=(0, 0.08 if ncol == len(labels) else 0.14, 1, 1))
 
 
 def watermark(fig):
@@ -138,24 +140,47 @@ def fig_circuits():
 
     c = CVQNet(6, 3, layers=1)
     fig, _ = c.draw(c.init(jax.random.PRNGKey(0)), decimals=None, style="black_white", fontsize=13)
-    p2 = save_figure(fig, "fig_circuito_cv")
+    p2 = save_figure(fig, "fig_circuito_cv_gauss")
     plt.close(fig)
-    return p1, p2
+
+    # CV QNN with Kerr (the "cv" agent): encoding D(alpha_i) + one CVNeuralNetLayers layer, 3 modes.
+    import pennylane as qml
+    from cvjax import layers as cvl
+
+    rng = np.random.default_rng(0)
+    w = [rng.normal(0, 0.1, shp) for shp in cvl.shapes(1, 3)]
+    ops = []
+    for op in qml.CVNeuralNetLayers.compute_decomposition(*w, wires=[0, 1, 2]):
+        ops += op.decomposition() if op.name == "Interferometer" else [op]
+    dev = qml.device("default.gaussian", wires=3)        # drawing only, never executed
+
+    @qml.qnode(dev)
+    def cv_kerr():
+        for i in range(3):
+            qml.Displacement(0.3, 0.2, wires=i)            # encoding alpha_i = s x_{2i} + i s x_{2i+1}
+        for op in ops:
+            qml.apply(op)
+        return [qml.expval(qml.QuadX(i)) for i in range(3)]
+
+    fig, _ = qml.draw_mpl(cv_kerr, decimals=None, style="black_white", fontsize=13)()
+    p3 = save_figure(fig, "fig_circuito_cv")
+    plt.close(fig)
+    return p1, p2, p3
 
 
 def fig_cost():
     path = DATA / "custo" / "custo_por_agente.csv"
     rows = list(csv.DictReader(path.open()))
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.4), sharey=False)
-    width = 0.2
+    width = 0.16
     games = ["pong", "snake"]
     for ax, key, ylabel, log in [(axes[0], "parameters", "trainable parameters", True),
                                  (axes[1], "step_ms", "ms per gradient step (batch 32, CPU)", True)]:
         for k, agent in enumerate(AGENTS):
             vals = [float(next(r[key] for r in rows if r["game"] == g and r["agent"] == agent)) for g in games]
-            xs = np.arange(len(games)) + (k - 1.5) * width
+            xs = np.arange(len(games)) + (k - (len(AGENTS) - 1) / 2) * width
             bars = ax.bar(xs, vals, width * 0.9, color=COLOR[agent], label=LABEL[agent],
-                          hatch=["", "///", "...", "xx"][k], edgecolor="white", linewidth=0.5)
+                          hatch=["", "///", "...", "xx", "\\\\"][k], edgecolor="white", linewidth=0.5)
             for b, v in zip(bars, vals):
                 ax.text(b.get_x() + b.get_width() / 2, v * 1.12, (f"{v:.0f}" if v >= 10 else f"{v:.2g}"), ha="center", fontsize=6, color=INK)
         ax.set_xticks(range(len(games)), ["Pong", "Snake"])
@@ -186,8 +211,10 @@ def _synthetic(final, rise, spread, start, x, rng, seeds=10):
 # Shapes inspired by the literature (skolik2022gym, franz2022instab, nagy2021photonic):
 # small quantum models comparable to a classical model of the same size, larger spread.
 HYP = {
-    "pong": {"mlp": (2.6, 30, 0.2), "mlp_igual": (1.7, 45, 0.35), "vqc": (1.9, 50, 0.6), "cv": (1.4, 55, 0.7)},
-    "snake": {"mlp": (18, 35, 1.5), "mlp_igual": (11, 45, 2.0), "vqc": (12, 50, 3.5), "cv": (9, 55, 3.5)},
+    "pong": {"mlp": (2.6, 30, 0.2), "mlp_igual": (1.7, 45, 0.35), "vqc": (1.9, 50, 0.6), "cv": (1.6, 55, 0.7),
+             "cv_gauss": (0.9, 60, 0.7)},
+    "snake": {"mlp": (18, 35, 1.5), "mlp_igual": (11, 45, 2.0), "vqc": (12, 50, 3.5), "cv": (10, 55, 3.5),
+              "cv_gauss": (6, 60, 3.0)},
 }
 START = {"pong": -2.8, "snake": -0.8}
 
@@ -203,7 +230,7 @@ def fig_curves_illustrative():
             final, rise, spread = HYP[game][agent]
             m, s = _synthetic(final, rise, spread, START[game], x, rng)
             ax.fill_between(x, m - s, m + s, color=COLOR[agent], alpha=0.15, linewidth=0)
-            ax.plot(x, m, STYLE[agent], color=COLOR[agent], label=LABEL[agent])
+            ax.plot(x, m, linestyle=STYLE[agent], color=COLOR[agent], label=LABEL[agent])
             ax.plot(x[-1], m[-1], MARKER[agent], color=COLOR[agent], ms=4)
             ends[agent] = m[-1]
         span = np.ptp(ax.get_ylim())
@@ -222,8 +249,8 @@ def fig_curves_illustrative():
 
 def fig_params_illustrative():
     rng = np.random.default_rng(1)
-    params = {"pong": {"mlp": 4803, "mlp_igual": 93, "vqc": 90, "cv": 166},
-              "snake": {"mlp": 4996, "mlp_igual": 121, "vqc": 120, "cv": 224}}
+    rows = list(csv.DictReader((DATA / "custo" / "custo_por_agente.csv").open()))
+    params = {g: {r["agent"]: int(r["parameters"]) for r in rows if r["game"] == g} for g in ("pong", "snake")}
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.5))
     for ax, game in zip(axes, ["pong", "snake"]):
         for agent in AGENTS:
@@ -231,7 +258,7 @@ def fig_params_illustrative():
             vals = final + rng.normal(0, spread, 10)
             ax.errorbar(params[game][agent], vals.mean(), yerr=vals.std(), fmt=MARKER[agent],
                         color=COLOR[agent], ms=6, capsize=3, label=LABEL[agent])
-            dx, dy = {"mlp": (8, 4), "mlp_igual": (-8, -12), "vqc": (-8, 8), "cv": (8, -2)}[agent]
+            dx, dy = {"mlp": (8, 4), "mlp_igual": (-8, -12), "vqc": (-8, 8), "cv": (8, 4), "cv_gauss": (8, -8)}[agent]
             ax.annotate(SHORT[agent], (params[game][agent], vals.mean()), xytext=(dx, dy),
                         textcoords="offset points", fontsize=6.5, color=INK,
                         ha="right" if dx < 0 else "left")
