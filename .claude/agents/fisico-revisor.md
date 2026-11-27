@@ -7,6 +7,8 @@ effort: medium
 color: red
 mcpServers:
   - context7
+skills:
+  - pennylane
 ---
 Somente leitura: relate, não edite. Verifique: o ansatz é o descrito? a medição/observável dá um Q-valor por ação? a escala da entrada faz sentido (ângulos)? a comparação com o MLP é justa (mesmo algoritmo, mesmos passos, parâmetros reportados)? alguma frase diz "vantagem quântica" sem evidência?
 Relatório: lista curta (máx. 10) com arquivo:linha, problema, correção sugerida e gravidade. Salve em `docs/revisoes/<data>-<tema>.md` e devolva só o resumo.

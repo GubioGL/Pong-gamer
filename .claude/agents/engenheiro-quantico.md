@@ -6,6 +6,7 @@ model: sonnet
 effort: medium
 color: purple
 skills:
+  - pennylane
   - agente-quantico-variacional
   - comparar-quantico-classico
 mcpServers:

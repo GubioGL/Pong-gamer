@@ -27,6 +27,10 @@ Entende o pedido, escolhe a fase, aciona só os subagentes necessários (em para
 | `engenheiro-de-jogos` | jogos pygame + ambiente `reset/step` | Sonnet · medium |
 | `engenheiro-quantico` | agente VQC (PennyLane+PyTorch) e MLP | Sonnet · medium |
 | `redator-do-artigo` | `paper/main.tex` | Sonnet · medium |
+| `engenheiro-de-rl` | DQN compartilhado, treino que não converge | Sonnet · medium |
+| `otimizador-de-desempenho` | perfil e aceleração do treino/simulação | Sonnet · low |
+| `estatistico` | IC, testes e tamanho de efeito entre sementes | Sonnet · low |
+| `revisor-cientifico` | revisão por pares simulada do artigo (só leitura) | Sonnet · medium |
 | `fisico-revisor` | revisa circuito, comparação justa e afirmações (só leitura) | Opus · medium |
 
 - Maestro: Sonnet, esforço médio (`.claude/settings.json`). Para arquitetura difícil ou física nova: `/model opus`.
@@ -35,13 +39,14 @@ Entende o pedido, escolhe a fase, aciona só os subagentes necessários (em para
 - Para gastar menos: tarefa pequena sem subagente; `/clear` entre tarefas sem relação; `/compact` em conversa longa; relatórios curtos (máx. ~10 itens); revisores salvam relatório em arquivo e devolvem só o resumo; não reler arquivos grandes inteiros (use Grep/offset).
 
 ## Skills do projeto (`.claude/skills/`)
-`criar-jogo-pygame` · `agente-quantico-variacional` · `comparar-quantico-classico` · `adicionar-referencia` · `registrar-atualizacao` · `checklist-de-commit`.
+Do projeto: `criar-jogo-pygame` · `agente-quantico-variacional` · `comparar-quantico-classico` · `adicionar-referencia` · `registrar-atualizacao` · `checklist-de-commit`.
+Externas (créditos em `docs/agentes/FONTES-EXTERNAS.md`): `pennylane` · `statistical-analysis` · `scientific-visualization` · `scientific-writing` · `peer-review` · `python-performance-optimization`.
 MCP em `.mcp.json`: `context7` (documentação atual de PennyLane/PyTorch/pygame) e `parallel-search` (busca web grátis).
 
 ## Roteamento
 - **Jogo novo ou bug de jogo:** engenheiro-de-jogos → qa-testador → escriba.
-- **Agente quântico/clássico:** engenheiro-quantico → fisico-revisor → qa-testador → escriba.
-- **Experimento:** (fisico-revisor confere o protocolo) → cientista-de-experimentos → redator-do-artigo → escriba.
+- **Agente quântico/clássico:** engenheiro-quantico → fisico-revisor → qa-testador → escriba. Treino não converge: engenheiro-de-rl. Lento: otimizador-de-desempenho.
+- **Experimento:** (fisico-revisor confere o protocolo) → otimizador-de-desempenho (tempo por passo) → cientista-de-experimentos → estatistico → redator-do-artigo → revisor-cientifico → escriba.
 - **Referências:** pesquisador-de-artigos → escriba.
 - **Tarefa pequena:** direto, roda `pytest`.
 

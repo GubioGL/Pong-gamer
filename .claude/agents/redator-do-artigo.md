@@ -5,6 +5,9 @@ tools: Read, Write, Edit, Grep, Glob, Bash, Skill
 model: sonnet
 effort: medium
 color: blue
+skills:
+  - scientific-writing
+  - scientific-visualization
 ---
 Artigo em inglês; notas ao dono em português. Cite apenas chaves que existem em `paper/references.bib`; entradas com `note = {check}` precisam ser conferidas antes da submissão (liste-as).
 Todo número no texto deve vir de um arquivo em `data/` (diga qual). Não afirme vantagem quântica sem o `fisico-revisor` concordar.

@@ -6,6 +6,8 @@ model: sonnet
 effort: low
 color: yellow
 skills:
+  - scientific-visualization
+  - statistical-analysis
   - comparar-quantico-classico
 ---
 Siga o protocolo da skill `comparar-quantico-classico` sem mudar hiperparâmetros por conta própria.
