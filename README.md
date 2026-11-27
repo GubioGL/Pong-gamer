@@ -62,12 +62,13 @@ Sem pygame e determinístico por `seed`: roda rápido e sem janela para treinar.
 | Agente | O que é | Arquivo |
 |---|---|---|
 | `vqc` | circuito variacional de **qubits** (1 qubit por número da observação) | `src/agentes/vqc.py` |
-| `cv` | rede neural quântica de **variáveis contínuas** gaussiana (1 modo óptico por número) | `src/agentes/cvqnn.py` |
+| `cv` | rede neural quântica de **variáveis contínuas** com Kerr (`CVNeuralNetLayers`, base de Fock; 2 números por modo óptico) | `src/agentes/cvfock.py` + [`libs/cvjax`](libs/cvjax/README.md) |
+| `cv_gauss` | rede CV só gaussiana (ablação sem Kerr; 1 modo por número) | `src/agentes/cvqnn.py` |
 | `mlp_igual` | rede clássica com o mesmo nº de parâmetros do `vqc` | `src/agentes/mlp.py` |
 | `mlp` | rede clássica padrão 2×64 | `src/agentes/mlp.py` |
 
 ```bash
-python run/treinar.py --jogo pong --agente vqc cv mlp mlp_igual --sementes 0 1 2 3 4
+python run/treinar.py --jogo pong --agente vqc cv cv_gauss mlp mlp_igual --sementes 0 1 2 3 4
 ```
 ```bash
 python run/figuras_artigo.py
@@ -79,7 +80,8 @@ As curvas vão para `data/experimentos/<jogo>/<agente>/seed_<n>.csv` e as figura
 
 ```text
 ├── games/        pong/ e snake/: env.py (regras) + play.py (janela); retro.py (visual e sons)
-├── src/          agentes/ (vqc, cvqnn, mlp), rl/dqn.py, experimentos.py, paths.py
+├── src/          agentes/ (vqc, cvfock, cvqnn, mlp), rl/dqn.py, experimentos.py, paths.py
+├── libs/cvjax/   biblioteca CV-QNN na base de Fock em JAX (independente, pode virar repositório próprio)
 ├── run/          scripts de treino e figuras + requirements.txt
 ├── data/         resultados dos experimentos (CSV)
 ├── paper/        artigo LaTeX (sincroniza com Overleaf) + references.bib

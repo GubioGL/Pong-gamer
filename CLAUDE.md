@@ -25,7 +25,7 @@ Entende o pedido, escolhe a fase, aciona só os subagentes necessários (em para
 | `qa-testador` | pytest, jogo sem tela, scripts | Haiku · low |
 | `cientista-de-experimentos` | roda sementes, salva `data/`, figuras | Sonnet · low |
 | `engenheiro-de-jogos` | jogos pygame + ambiente `reset/step` | Sonnet · medium |
-| `engenheiro-quantico` | agentes quânticos (qubits e variáveis contínuas, PennyLane+JAX) e MLP | Sonnet · medium |
+| `engenheiro-quantico` | agentes quânticos (qubits; variáveis contínuas com Kerr via `libs/cvjax`; CV gaussiano) e MLP | Sonnet · medium |
 | `redator-do-artigo` | `paper/main.tex` | Sonnet · medium |
 | `engenheiro-de-rl` | DQN compartilhado, treino que não converge | Sonnet · medium |
 | `otimizador-de-desempenho` | perfil e aceleração do treino/simulação | Sonnet · low |

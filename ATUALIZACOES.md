@@ -3,6 +3,19 @@
 O que mudou em cada commit, em linguagem simples, para quem acompanha o projeto.
 Mais recente em cima. Formato e regras: skill `registrar-atualizacao` (o agente `escriba` mantém este arquivo).
 
+## 2026-11-27 (3ª rodada): rede CV com Kerr e biblioteca cvjax
+
+| Commit | O que mudou | Arquivos principais |
+|---|---|---|
+| (este commit) | Documentação, referências (incluindo o artigo de regressão do autor) e este relatório. Os testes da `cvjax` entram no `pytest` do projeto (38 no total). | `README.md`, `docs/PLANO.md`, `referencias/ARTIGOS.md` |
+| `4b06367` | **Artigo:** seção nova sobre o treino (passo a passo do DQN), o que entra e sai de cada rede, figura do fluxo jogo → rede → ação, seção CV reescrita para a rede com Kerr. Tabela de custo gerada do CSV. | `paper/main.tex`, `paper/tab_custo.tex`, `run/figuras_artigo.py` |
+| `cf342e4` | **Agente `cv` com Kerr** nos jogos (2 números por modo, um modo por ação, leitura ⟨x̂⟩). O agente gaussiano antigo virou `cv_gauss` (ablação). | `src/agentes/cvfock.py`, `src/experimentos.py` |
+| `d2e4ce6` | **Biblioteca `cvjax`:** rede neural quântica CV (`CVNeuralNetLayers` do PennyLane) na base de Fock, em JAX, com elementos de matriz exatos e testes contra PennyLane e The Walrus. Créditos: PennyLane, Strawberry Fields, The Walrus, CV-QuForge (Tiago) e QuIara (Tiago e Alexandre). | `libs/cvjax/` |
+
+**Por quê:** o agente CV anterior só tinha portas gaussianas, sem a não linearidade Kerr da rede de Killoran et al. A camada do PennyLane com Kerr precisa de um dispositivo de Fock que não funciona mais com o PennyLane atual (`pennylane-sf` exige `pennylane<0.30`), por isso a biblioteca própria.
+**Atenção:** o agente CV com Kerr é o mais caro (Pong 28 ms/passo, Snake 110 ms/passo em CPU).
+**Próximos passos:** acelerar o CV no Snake (otimizador-de-desempenho); revisão física dos três circuitos (fisico-revisor); rodar as sementes.
+
 ## 2026-11-27 (2ª rodada): cobrinha, agentes quânticos e rascunho do artigo
 
 | Commit | O que mudou | Arquivos principais |

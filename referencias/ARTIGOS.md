@@ -49,6 +49,7 @@ Como adicionar uma fonte: use a skill `adicionar-referencia` (`.claude/skills/ad
 |---|---|---|---|---|
 | ⭐⭐ | `cerezo2021vqa` | M. Cerezo et al. *Variational quantum algorithms*. Nat. Rev. Phys. 3, 625–644 (2021). doi:10.1038/s42254-021-00348-9 | Revisão de VQAs (ansatz, otimizadores, treinabilidade). | ◐ |
 | ⭐⭐⭐ | `killoran2019cvqnn` | N. Killoran, T. R. Bromley, J. M. Arrazola, M. Schuld, N. Quesada, S. Lloyd. *Continuous-variable quantum neural networks*. Phys. Rev. Research 1, 033063 (2019). arXiv:1806.06871 | Rede neural quântica de variáveis contínuas: portas gaussianas = parte afim, porta não gaussiana (Kerr) = ativação. Base do nosso `CVQNet` (versão gaussiana). | ✔ |
+| ⭐⭐⭐ | `delima2026regression` | G. G. de Lima, T. de S. Farias, A. C. Ricardo, C. J. Villas-Bôas. *Assessing the Advantages and Limitations of Quantum Neural Networks in Regression Tasks*. Quantum Machine Intelligence 8, 20 (2026). arXiv:2509.00854. [código](https://github.com/GubioGL/Quantum-Neural-Networks-in-Regression-Tasks) | **Trabalho do autor.** QNN CV de 1 modo (camada R S R D K, entrada D(x)\|0⟩, saída ⟨a + a†⟩): base do nosso agente `cv` e da `libs/cvjax`. | ✔ (busca; nº do artigo ◐) |
 | ⭐⭐ | `weedbrook2012gaussian` | C. Weedbrook et al. *Gaussian quantum information*. Rev. Mod. Phys. 84, 621 (2012). | Formalismo de média e covariância usado no nosso simulador gaussiano. | ◐ |
 | ⭐⭐ | `mcclean2018barren` | J. R. McClean et al. *Barren plateaus in quantum neural network training landscapes*. Nat. Commun. 9, 4812 (2018). doi:10.1038/s41467-018-07090-4 | Gradientes que somem: limita o nº de qubits/camadas. | ◐ |
 | ⭐⭐⭐ | `perezsalinas2020reuploading` | A. Pérez-Salinas et al. *Data re-uploading for a universal quantum classifier*. Quantum 4, 226 (2020). doi:10.22331/q-2020-02-06-226 | Re-uploading: como codificar o estado do jogo em poucos qubits. | ◐ |
@@ -82,6 +83,11 @@ Estes tratam de jogos *sobre* física quântica ou de teoria dos jogos quântica
 - `bergholm2018pennylane`: V. Bergholm et al. *PennyLane: Automatic differentiation of hybrid quantum-classical computations*. arXiv:1811.04968. Biblioteca sugerida (integra com PyTorch). ◐
 - TensorFlow Quantum, tutorial *Parametrized quantum circuits for reinforcement learning* (reproduz Jerbi 2021 e Skolik 2022): <https://www.tensorflow.org/quantum/tutorials/quantum_reinforcement_learning> ◐
 - Código de Chen et al. 2020: <https://github.com/ycchen1989/var-quantumcircuits-deeprl> ✔
+- `killoran2019sf`: N. Killoran et al. *Strawberry Fields: A Software Platform for Photonic Quantum Computing*. Quantum 3, 129 (2019). Backend `fock` (inspiração da `libs/cvjax`). ◐
+- `gupt2019walrus`: B. Gupt, J. Izaac, N. Quesada. *The Walrus*. JOSS 4(44), 1705 (2019). Elementos de matriz de D, S e BS; referência numérica dos testes da `cvjax`. ◐
+- `pennylane_cvqnn_demo`: demo do PennyLane *Function fitting with a photonic quantum neural network*: <https://pennylane.ai/demos/quantum_neural_net>; template [`CVNeuralNetLayers`](https://docs.pennylane.ai/en/stable/code/api/pennylane.CVNeuralNetLayers.html). ✔ (links do autor)
+- CV-QuForge (Tiago de S. Farias, `tiago939`, MIT) e QuIara (Tiago de S. Farias e Alexandre C. Ricardo, Apache-2.0): simuladores CV em PyTorch que inspiraram a `cvjax` (cópias enviadas pelo autor; sem link público).
+- `jax2018github`: JAX. `vanhasselt2016double`: H. van Hasselt, A. Guez, D. Silver. *Deep Reinforcement Learning with Double Q-Learning*. AAAI 2016 (o DQN que usamos). ◐
 
 ---
 
