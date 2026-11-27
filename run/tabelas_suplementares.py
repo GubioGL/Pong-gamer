@@ -28,6 +28,7 @@ import csv
 import json
 import random
 import statistics
+from dataclasses import replace
 
 import jax
 
@@ -147,15 +148,17 @@ def table_models():
 # ------------------------------------------------------------------ DQN
 def table_dqn():
     c = GAMES["pong"]["dqn"]
-    assert c == GAMES["snake"]["dqn"], "the two games use different DQN settings: update the table"
+    c_snake = GAMES["snake"]["dqn"]
+    assert replace(c, lr=c_snake.lr) == c_snake, "the games differ in more than the learning rate: update the table"
     rows = [("algorithm", "Double DQN, Huber loss, Adam" if c.double_dqn else "DQN, Huber loss, Adam"),
             ("environment steps per run", sci(c.total_steps)), ("discount $\\gamma$", c.gamma),
-            ("learning rate (circuit / MLP)", sci(c.lr)), ("learning rate of $w,b$ (quantum output)", sci(c.lr_out)),
+            ("learning rate (circuit / MLP)", f"{sci(c.lr)} (Pong), {sci(c_snake.lr)} (Snake)"), ("learning rate of $w,b$ (quantum output)", sci(c.lr_out)),
             ("mini-batch", c.batch_size), ("replay buffer", sci(c.buffer_size)),
             ("warm-up (random actions)", f"{c.warmup} steps"), ("gradient step", f"every {c.train_every} environment step(s)"),
             ("target network update", f"every {c.target_update} gradient steps"),
             ("$\\varepsilon$-greedy", f"{c.eps_start} $\\to$ {c.eps_end}, linear over {sci(c.eps_decay_steps)} steps"),
             ("gradient clipping", f"global norm {c.grad_clip}"),
+            ("greedy evaluation", f"every {sci(c.eval_every)} steps, {c.eval_episodes} fresh episodes (seeds $10\\,000+$)"),
             ("quantum layers $L$", LAYERS), ("Fock cutoff (CV QNN)", f"{CUTOFF} per mode")]
     body = "\\begin{tabular}{ll}\n\\toprule\n" + "".join(f"{a} & {b} \\\\\n" for a, b in rows) + "\\bottomrule\n\\end{tabular}"
     write("tab_dqn.tex", body)
@@ -193,10 +196,47 @@ def reference_scores(n=30):
     return rows
 
 
+# ------------------------------------------------------------------ tuning sweep
+def _last_evals(csv_path, last=6):
+    seen = []
+    for r in csv.DictReader(csv_path.open()):
+        v = r["eval_return"]
+        if v not in ("", "None") and (not seen or v != seen[-1]):
+            seen.append(v)
+    return statistics.mean(float(v) for v in seen[-last:])
+
+
+def table_tuning():
+    """Sweep of DQN settings with the MLP (data/ajuste/<config>/<game>/mlp/seed_*.csv)."""
+    root = DATA / "ajuste"
+    rows = []
+    for cfg_dir in sorted(p for p in root.iterdir() if p.is_dir()):
+        entry = {}
+        for game in ("pong", "snake"):
+            files = sorted((cfg_dir / game / "mlp").glob("seed_*.csv"))
+            if files:
+                meta = json.loads(files[0].with_suffix(".json").read_text())["dqn"]
+                entry[game] = [_last_evals(f) for f in files]
+                entry["lr"], entry["tu"], entry["batch"] = meta["lr"], meta["target_update"], meta["batch_size"]
+        if entry:
+            rows.append(entry)
+    rows.sort(key=lambda e: (e["lr"] != 1e-3 or e["tu"] != 500 or e["batch"] != 32, -statistics.mean(e["pong"])))
+
+    def cell(vals):
+        return "---" if not vals else f"${statistics.mean(vals):.2f}$ ({', '.join(f'${v:.1f}$' for v in vals)})"
+    lines = ["\\small", "\\begin{tabular}{rrrL{4.3cm}L{4.3cm}}", "\\toprule",
+             "learning rate & target update & batch & Pong: mean (per seed) & Snake: mean (per seed) \\\\", "\\midrule"]
+    for e in rows:
+        lines.append(f"{sci(e['lr'])} & {e['tu']} & {e['batch']} & {cell(e.get('pong'))} & {cell(e.get('snake'))} \\\\")
+    lines += ["\\bottomrule", "\\end{tabular}"]
+    write("tab_ajuste.tex", "\n".join(lines))
+
+
 if __name__ == "__main__":
     table_machine()
     table_envs()
     table_models()
     table_dqn()
+    table_tuning()
     for r in reference_scores():
         print(r)

@@ -3,6 +3,12 @@
 O que mudou em cada commit, em linguagem simples, para quem acompanha o projeto.
 Mais recente em cima. Formato e regras: skill `registrar-atualizacao` (o agente `escriba` mantém este arquivo).
 
+## 2026-11-27 (7ª rodada): MLP validado e ajuste do otimizador
+
+| Commit | O que mudou | Arquivos principais |
+|---|---|---|
+| (este commit) | **MLP validado com treino completo** (100 mil passos): no Snake sobe de −1,0 para ~17 pontos (referência por regra: 18,3); no Pong aprendia, mas de forma instável. **Falha corrigida:** a avaliação gulosa a cada 5000 passos, prometida no artigo, estava desligada. **Ajuste:** no Pong, taxa de aprendizado `1e-3` → `3e-4` (média das últimas avaliações −0,88 → +0,66; atualizar a rede-alvo mais devagar piorou). Snake ficou em `1e-3` (diferença dentro do ruído). Varredura gravada em `data/ajuste/` e na tabela S6 do suplemento. **Ressalva:** só o MLP foi ajustado; os agentes quânticos não. Novos: `run/resumo_treino.py` (resumo curto dos treinos, para colar numa conversa) e `--set chave=valor` no `run/treinar.py`. | `src/experimentos.py`, `run/treinar.py`, `run/resumo_treino.py`, `data/ajuste/`, `paper/main.tex` |
+
 ## 2026-11-27 (6ª rodada): artigo com Material Suplementar
 
 | Commit | O que mudou | Arquivos principais |

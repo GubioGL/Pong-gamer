@@ -1,0 +1,32 @@
+{
+  "seed": 1,
+  "parameters": 4996,
+  "model": "MLPQNet",
+  "model_config": {
+    "kind": "mlp",
+    "n_obs": 8,
+    "n_actions": 4,
+    "hidden": [
+      64,
+      64
+    ]
+  },
+  "dqn": {
+    "total_steps": 100000,
+    "gamma": 0.99,
+    "lr": 0.0003,
+    "lr_out": 0.01,
+    "batch_size": 32,
+    "buffer_size": 20000,
+    "warmup": 1000,
+    "train_every": 1,
+    "target_update": 500,
+    "eps_start": 1.0,
+    "eps_end": 0.05,
+    "eps_decay_steps": 40000,
+    "double_dqn": true,
+    "grad_clip": 10.0,
+    "eval_every": 5000,
+    "eval_episodes": 5
+  }
+}

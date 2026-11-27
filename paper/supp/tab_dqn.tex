@@ -4,7 +4,7 @@
 algorithm & Double DQN, Huber loss, Adam \\
 environment steps per run & $100\,000$ \\
 discount $\gamma$ & 0.99 \\
-learning rate (circuit / MLP) & $10^{-3}$ \\
+learning rate (circuit / MLP) & $3\times10^{-4}$ (Pong), $10^{-3}$ (Snake) \\
 learning rate of $w,b$ (quantum output) & $10^{-2}$ \\
 mini-batch & 32 \\
 replay buffer & $20\,000$ \\
@@ -13,6 +13,7 @@ gradient step & every 1 environment step(s) \\
 target network update & every 500 gradient steps \\
 $\varepsilon$-greedy & 1.0 $\to$ 0.05, linear over $40\,000$ steps \\
 gradient clipping & global norm 10.0 \\
+greedy evaluation & every 5000 steps, 5 fresh episodes (seeds $10\,000+$) \\
 quantum layers $L$ & 4 \\
 Fock cutoff (CV QNN) & 6 per mode \\
 \bottomrule

@@ -15,14 +15,18 @@ from rl.dqn import DQNConfig
 LAYERS = 4
 CUTOFF = 6        # Fock levels per mode of the CV agent (leakage <= ~1e-3 at initialization)
 
+# Pong: lr 3e-4 chosen with the MLP on 3 seeds (data/ajuste, Supplementary S5); Snake kept at 1e-3.
+# The quantum models' learning rates were NOT tuned (see PLANO.md).
 GAMES = {
     # Pong episodes are short matches (3 points) so that agents see many episodes.
     "pong": {"env": lambda seed: PongEnv(seed=seed, points_to_win=3, max_steps=5_000),
              "n_obs": PongEnv.OBS_SIZE, "n_actions": PongEnv.N_ACTIONS,
-             "dqn": DQNConfig(total_steps=100_000, eps_decay_steps=40_000, lr=1e-3, lr_out=1e-2)},
+             "dqn": DQNConfig(total_steps=100_000, eps_decay_steps=40_000, lr=3e-4, lr_out=1e-2,
+                     eval_every=5_000, eval_episodes=5)},
     "snake": {"env": lambda seed: SnakeEnv(seed=seed),
               "n_obs": SnakeEnv.OBS_SIZE, "n_actions": SnakeEnv.N_ACTIONS,
-              "dqn": DQNConfig(total_steps=100_000, eps_decay_steps=40_000, lr=1e-3, lr_out=1e-2)},
+              "dqn": DQNConfig(total_steps=100_000, eps_decay_steps=40_000, lr=1e-3, lr_out=1e-2,
+                     eval_every=5_000, eval_episodes=5)},
 }
 
 

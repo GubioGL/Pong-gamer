@@ -421,9 +421,30 @@ rate, following~\cite{skolik2022gym}. \TODO{Decide whether the MLPs' last layer 
 
 \begin{table}[h]
   \centering
-  \caption{Training hyperparameters (\texttt{src/experimentos.py}), identical for all agents and both games.}
+  \caption{Training hyperparameters (\texttt{src/experimentos.py}); identical for all agents, and for both games
+  except the learning rate.}
   \label{tab:dqn}
   \input{supp/tab_dqn.tex}
+\end{table}
+
+\paragraph{Choice of the learning rate.} The shared settings were checked with the classical MLP, which is the
+cheapest to train, using 3 seeds and the full budget of $10^5$ steps (Table~\ref{tab:tuning}; score = mean of the
+last six greedy evaluations of each seed, data in \texttt{data/ajuste/}). In Pong the default learning rate
+($10^{-3}$) gave unstable play, with the greedy score swinging between $-3$ and $+3$ during training, and
+$3\times10^{-4}$ gave a clearly better and steadier result; a slower target network (update every 2000 steps)
+learned too slowly within the budget. The other changes tried (batch size, target update every 250 steps) were
+within the seed-to-seed noise, so only the learning rate was changed. In Snake the difference between
+$10^{-3}$ and $3\times10^{-4}$ was within the noise, so the original value was kept. \textbf{This selection used only the
+classical baseline and may favor it; the learning rates of the quantum models were not tuned.}
+\TODO{Run the same small sweep for the quantum agents, with the same budget.}
+
+\begin{table}[h]
+  \centering
+  \caption{Sweep of training settings with the MLP (score: mean over seeds of the last six greedy evaluations;
+  individual seeds in parentheses; reference return: random $-2.94$, rule-based $+2.71$ in Pong; $-1.09$ and
+  $+18.3$ in Snake).}
+  \label{tab:tuning}
+  \input{supp/tab_ajuste.tex}
 \end{table}
 
 \section{Evaluation and statistics}\label{supp:stats}

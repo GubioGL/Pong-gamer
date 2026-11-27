@@ -2,6 +2,7 @@
 
     python run/treinar.py --jogo pong --agente vqc --sementes 0 1 2 3 4
     python run/treinar.py --jogo snake --agente mlp cv --sementes 0 --passos 5000   # quick test
+    python run/treinar.py --jogo pong --agente mlp --sementes 0 1 2 --set lr=3e-4 --saida data/ajuste/lr3e-4
 
 Settings come from src/experimentos.py (same for every agent: fair comparison).
 """
@@ -36,6 +37,8 @@ def main():
     ap.add_argument("--sementes", type=int, nargs="+", default=[0])
     ap.add_argument("--passos", type=int, default=None, help="override total_steps (quick tests)")
     ap.add_argument("--saida", default=None, help="output folder (default data/experimentos)")
+    ap.add_argument("--set", dest="sets", action="append", default=[], metavar="CHAVE=VALOR",
+                    help="override a DQNConfig field, e.g. --set lr=3e-4 --set target_update=2000 (tuning only)")
     args = ap.parse_args()
 
     g = GAMES[args.jogo]
@@ -44,6 +47,13 @@ def main():
         cfg = dataclasses.replace(cfg, total_steps=args.passos,
                                   eps_decay_steps=min(cfg.eps_decay_steps, args.passos // 2),
                                   warmup=min(cfg.warmup, args.passos // 5))
+    for item in args.sets:                                   # tuning overrides, cast to the field's type
+        key, _, val = item.partition("=")
+        fields = {f.name: f for f in dataclasses.fields(cfg)}
+        if key not in fields:
+            raise SystemExit(f"unknown DQNConfig field {key!r}; options: {', '.join(fields)}")
+        kind = type(getattr(cfg, key))
+        cfg = dataclasses.replace(cfg, **{key: (val.lower() == "true") if kind is bool else kind(float(val)) if kind is int else kind(val)})
     out = _Path(args.saida) if args.saida else DATA / "experimentos"
     for agent in args.agente:
         for seed in args.sementes:
