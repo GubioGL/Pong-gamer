@@ -6,7 +6,7 @@ Busca por coleções de subagentes/skills do Claude Code que ajudem a organizar 
 
 | Skill | Origem | Licença | Usada por | Para quê |
 |---|---|---|---|---|
-| `pennylane` | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Apache-2.0 (indicado na própria skill) | engenheiro-quantico, fisico-revisor, otimizador | API atual do PennyLane 0.45: circuitos, modelos híbridos com PyTorch, dispositivos, otimização |
+| `pennylane` | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Apache-2.0 (indicado na própria skill) | engenheiro-quantico, fisico-revisor, otimizador | API atual do PennyLane 0.45: circuitos, modelos híbridos com PyTorch ou JAX, dispositivos, otimização |
 | `statistical-analysis` | K-Dense-AI/scientific-agent-skills | MIT | estatistico, cientista-de-experimentos | testes, IC, tamanho de efeito entre sementes |
 | `scientific-visualization` | K-Dense-AI/scientific-agent-skills | MIT | cientista-de-experimentos, redator | figuras de publicação (estilos matplotlib, paletas acessíveis) |
 | `scientific-writing` | K-Dense-AI/scientific-agent-skills | MIT | redator-do-artigo | estrutura IMRaD, matriz afirmação-evidência |

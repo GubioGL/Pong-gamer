@@ -1,6 +1,6 @@
 # Referências: algoritmos quânticos aplicados a jogos
 
-Lista de fontes para o projeto (agentes quânticos variacionais vs. redes neurais clássicas em Pong e Snake).
+Lista de fontes para o projeto: agentes quânticos variacionais, de **qubits** e de **variáveis contínuas**, comparados com redes neurais clássicas em Pong e Snake.
 Cada item tem a chave BibTeX usada em [`paper/references.bib`](../paper/references.bib).
 
 **Status:** ✔ = conferido em busca web em 2026-11-27 (título, autores, local); ◐ = da memória, conferir antes de citar.
@@ -31,6 +31,8 @@ Como adicionar uma fonte: use a skill `adicionar-referencia` (`.claude/skills/ad
 | ⭐⭐ | `chen2022evo` | S. Y.-C. Chen et al. *Variational quantum reinforcement learning via evolutionary optimization*. arXiv:2109.00540 (2021). | MiniGrid (mundo em grade): o mais parecido estruturalmente com Snake. Otimização sem gradiente. | ✔ (arXiv) |
 | ⭐⭐ | `maze2023hqnn` | *Deep-Q Learning with Hybrid Quantum Neural Network on Solving Maze Problems*. arXiv:2304.10159 (2023). | Labirinto em grade com DQN híbrido; referência para Snake. | ✔ (título/arXiv) |
 | ⭐ | `luo2025hdqnn` | Luo et al. *Training Hybrid Deep Quantum Neural Network for Efficient Reinforcement Learning*. arXiv:2503.09119 (2025). | Redes quânticas profundas híbridas; controle contínuo (não jogos). | ✔ (arXiv) |
+| ⭐⭐⭐ | `nagy2021photonic` | D. Nagy et al. *Photonic Quantum Policy Learning in OpenAI Gym*. arXiv:2108.12926 (2021). | Agente de **variáveis contínuas (fotônico)** com PPO em CartPole: comparável ao clássico com o mesmo nº de parâmetros, convergindo mais rápido. Referência direta para o nosso agente CV. | ✔ (título/arXiv; autores ◐) |
+| ⭐⭐ | `nagy2024latent` | *Hybrid Quantum-Classical Reinforcement Learning in Latent Observation Spaces*. arXiv:2410.18284 (2024). | Autoencoder clássico + agente quântico, com versões **fotônica (CV)** e de **qubits**: o mesmo par de algoritmos que comparamos. | ✔ (título/arXiv; autores ◐) |
 | ⭐ | `kwak2021intro` | Y. Kwak et al. *Introduction to Quantum Reinforcement Learning: Theory and PennyLane-based Implementation*. ICTC 2021. arXiv:2108.06849 | Tutorial com código PennyLane: bom ponto de partida de implementação. | ◐ |
 
 ## C. Comparações quântico vs. clássico (como fazer uma comparação justa)
@@ -46,6 +48,8 @@ Como adicionar uma fonte: use a skill `adicionar-referencia` (`.claude/skills/ad
 | ⭐ | Chave | Referência | O que interessa | Status |
 |---|---|---|---|---|
 | ⭐⭐ | `cerezo2021vqa` | M. Cerezo et al. *Variational quantum algorithms*. Nat. Rev. Phys. 3, 625–644 (2021). doi:10.1038/s42254-021-00348-9 | Revisão de VQAs (ansatz, otimizadores, treinabilidade). | ◐ |
+| ⭐⭐⭐ | `killoran2019cvqnn` | N. Killoran, T. R. Bromley, J. M. Arrazola, M. Schuld, N. Quesada, S. Lloyd. *Continuous-variable quantum neural networks*. Phys. Rev. Research 1, 033063 (2019). arXiv:1806.06871 | Rede neural quântica de variáveis contínuas: portas gaussianas = parte afim, porta não gaussiana (Kerr) = ativação. Base do nosso `CVQNet` (versão gaussiana). | ✔ |
+| ⭐⭐ | `weedbrook2012gaussian` | C. Weedbrook et al. *Gaussian quantum information*. Rev. Mod. Phys. 84, 621 (2012). | Formalismo de média e covariância usado no nosso simulador gaussiano. | ◐ |
 | ⭐⭐ | `mcclean2018barren` | J. R. McClean et al. *Barren plateaus in quantum neural network training landscapes*. Nat. Commun. 9, 4812 (2018). doi:10.1038/s41467-018-07090-4 | Gradientes que somem: limita o nº de qubits/camadas. | ◐ |
 | ⭐⭐⭐ | `perezsalinas2020reuploading` | A. Pérez-Salinas et al. *Data re-uploading for a universal quantum classifier*. Quantum 4, 226 (2020). doi:10.22331/q-2020-02-06-226 | Re-uploading: como codificar o estado do jogo em poucos qubits. | ◐ |
 | ⭐⭐ | `schuld2021encoding` | M. Schuld, R. Sweke, J. J. Meyer. *Effect of data encoding on the expressive power of variational quantum machine-learning models*. Phys. Rev. A 103, 032430 (2021). doi:10.1103/PhysRevA.103.032430 | Por que escalar a entrada / repetir a codificação. | ◐ |
@@ -85,4 +89,5 @@ Estes tratam de jogos *sobre* física quântica ou de teoria dos jogos quântica
 
 1. **Snake:** não achei nenhum trabalho com agente quântico variacional no Snake. O mais próximo é mundo em grade (MiniGrid, labirinto). Seria uma contribuição original.
 2. **Pong com observação de baixa dimensão:** os trabalhos de Pong usam pixels (Atari), e a parte clássica faz a maior parte do trabalho. Um Pong com estado pequeno (posição/velocidade da bola e raquetes, 3 ações) permite um agente *majoritariamente quântico* e uma comparação limpa com MLP de mesmo nº de parâmetros.
-3. **Comparação justa:** os resultados são mistos e dependem muito do baseline e das sementes (`franz2022instab`, `skolik2022gym`). Precisamos de várias sementes, mesmo algoritmo (DQN) e de reportar parâmetros, tempo de treino e variância.
+3. **Qubits x variáveis contínuas no mesmo jogo:** só achei a comparação em CartPole/espaço latente (`nagy2024latent`); não encontrei trabalho comparando os dois tipos de agente quântico e uma rede clássica em Pong e Snake.
+4. **Comparação justa:** os resultados são mistos e dependem muito do baseline e das sementes (`franz2022instab`, `skolik2022gym`). Precisamos de várias sementes, mesmo algoritmo (DQN) e de reportar parâmetros, tempo de treino e variância.

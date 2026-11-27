@@ -1,8 +1,10 @@
-# Python >= 3.10.   pip install -r run/requirements.txt
+# Python >= 3.11.   pip install -r run/requirements.txt
 numpy
 matplotlib
 pygame          # games/ (human play and rendering)
 pytest          # tests/
-# Quantum / classical agents (Phase 2, see docs/PLANO.md):
-# torch
-# pennylane
+# Agents (DQN, qubit VQC, continuous-variable QNN)
+pennylane==0.45.1
+jax==0.7.1      # PennyLane 0.45.1 does not work with jax >= 0.8 (jax.core.is_concrete removed)
+jaxlib==0.7.1
+optax

@@ -9,18 +9,29 @@
 | Jogo | Ações | Observação | Recompensa | Status |
 |---|---|---|---|---|
 | Pong (`games/pong`) | 3: parado, cima, baixo | 6: bola x, y, vx, vy; raquete do jogador; raquete da CPU (todos em [-1, 1]) | +1 ponto feito, −1 ponto sofrido, +0.1 por rebatida | ✅ pronto |
-| Snake (`games/snake`) | 4: cima, baixo, esquerda, direita | 8 (proposta): direção da comida (dx, dy), perigo nas 4 direções, direção atual (dx, dy) | +1 comida, −1 morte, −0.01 por passo | ⬜ fazer |
+| Snake (`games/snake`) | 4: cima, baixo, esquerda, direita | 8: direção da comida (dx, dy), perigo nas 4 direções, direção atual (dx, dy) | +1 comida, −1 morte, −0.01 por passo; corte após 200 passos sem comer | ✅ pronto |
 
-Uma observação de tamanho n vira n qubits (1 número por qubit, como ângulo).
+Uma observação de tamanho n vira n qubits (agente de qubits) ou n modos ópticos (agente de variáveis contínuas): 1 número por qubit/modo, como ângulo/fase.
+
+## Agentes (todos treinados pelo mesmo DQN, `src/rl/dqn.py`)
+
+| Agente | Arquivo | Parâmetros (Pong / Snake, L = 4) |
+|---|---|---|
+| `vqc`: circuito variacional de **qubits** (PennyLane `default.qubit`) | `src/agentes/vqc.py` | 90 / 120 |
+| `cv`: rede neural quântica de **variáveis contínuas** gaussiana (PennyLane `default.gaussian` + simulador JAX equivalente) | `src/agentes/cvqnn.py` | 166 / 224 |
+| `mlp_igual`: rede clássica com ≈ o mesmo nº de parâmetros do `vqc` | `src/agentes/mlp.py` | 93 / 121 |
+| `mlp`: rede clássica padrão 2×64 | `src/agentes/mlp.py` | 4 803 / 4 996 |
+
+Treinar: `python run/treinar.py --jogo pong --agente vqc cv mlp mlp_igual --sementes 0 1 2 3 4`.
 
 ## Fases
 
 - [x] **0. Organização:** estrutura do paper-template, referências, equipe de agentes/skills, Pong terminado e testado.
-- [ ] **1. Snake:** `games/snake/env.py` + `play.py` + testes (skill `criar-jogo-pygame`). Agente: `engenheiro-de-jogos`.
-- [ ] **2. DQN + rede clássica:** `src/rl/dqn.py` (replay, target network, ε-greedy) e `src/agentes/mlp.py`. Validar no Pong curto (`points_to_win=1` ou `max_steps` pequeno) contra o agente `seguidor`. Agente: `engenheiro-quantico`.
-- [ ] **3. Agente quântico:** `src/agentes/vqc.py` (PennyLane + PyTorch, re-uploading, Q(a) = w·⟨Z_a⟩), skill `agente-quantico-variacional`. Revisão do `fisico-revisor` antes de treinar longo.
+- [x] **1. Snake:** `games/snake/env.py` + `play.py` + testes; visual retrô igual ao Pong.
+- [x] **2. DQN + rede clássica:** `src/rl/dqn.py` (JAX + optax: replay, target network, Double DQN, ε-greedy) e `src/agentes/mlp.py`. Teste de fumaça OK. *Falta:* validar que o MLP aprende Pong/Snake num treino completo (engenheiro-de-rl).
+- [x] **3. Agentes quânticos:** `vqc.py` (qubits) e `cvqnn.py` (variáveis contínuas; simulador JAX conferido contra o PennyLane até 1e-7). *Falta:* revisão do `fisico-revisor` antes de treinar longo.
 - [ ] **4. Experimentos:** protocolo da skill `comparar-quantico-classico` (VQC, MLP com o mesmo nº de parâmetros, MLP padrão; ≥ 5 sementes; mesmo orçamento). Dados em `data/experimentos/`, figuras em `paper/figures/`. Agente: `cientista-de-experimentos`.
-- [ ] **5. Extras (se der tempo):** policy gradient (`jerbi2021pqp`); efeito do emaranhamento (anel de CZ vs. sem CZ, como em `wang2026entanglement`); ruído de hardware.
+- [ ] **5. Extras (se der tempo):** policy gradient (`jerbi2021pqp`); efeito do emaranhamento (anel de CZ vs. sem CZ, `entangle=False`; como em `wang2026entanglement`); porta não gaussiana Kerr no agente CV (`killoran2019cvqnn`, exige simulador de Fock); ruído de hardware.
 - [ ] **6. Artigo:** `redator-do-artigo` → `fisico-revisor` → conferir entradas `note = {check}` do `.bib` → Overleaf.
 
 ## Métricas
@@ -29,13 +40,13 @@ Retorno por episódio (média ± desvio entre sementes) · episódios/passos at�
 
 ## Riscos
 
-- **Tempo de simulação:** cada passo do VQC custa mais que um MLP. Para reduzir: poucos qubits (≤ 8), `default.qubit` com backprop e lotes pequenos; medir o tempo antes de rodar as sementes.
+- **Tempo de simulação:** medido em CPU, lote 32: VQC ~7 ms por passo de gradiente (6 qubits) e ~13 ms (8 qubits); CV ~7 ms e ~12 ms. Isso dá ~6–20 min por semente de 100 mil passos, mais ~1 min de compilação JIT.
 - **Instabilidade entre sementes** (`franz2022instab`): por isso várias sementes e desvio-padrão nas figuras.
 - **Barren plateaus** (`mcclean2018barren`): poucas camadas, inicialização pequena.
 - **Episódios longos no Pong:** agentes que não erram fazem ralis enormes; nos treinos usar `points_to_win` baixo e `max_steps` curto.
 
-## Decisões para o dono
+## Decisões
 
-1. Biblioteca quântica: **PennyLane + PyTorch** (sugerida; tutorial e integração simples) ou Qiskit / TensorFlow Quantum?
-2. Algoritmo principal: **DQN** (sugerido; `skolik2022gym`) ou policy gradient?
-3. Conectar `paper/` ao Overleaf (passos no README do paper-template: variável `OVERLEAF_PROJECT` e segredo `OVERLEAF_TOKEN`).
+- ✅ Biblioteca: **PennyLane**, com sistemas **discretos (qubits)** e **contínuos (modos ópticos)** (decisão do dono, 2026-11-27). Backend numérico **JAX** em vez de PyTorch: o servidor do PyTorch para CPU estava bloqueado no ambiente de desenvolvimento, e o JAX roda em CPU (Windows, Linux, Mac) a partir do PyPI, com `jit`/`vmap` rápidos no PennyLane.
+- ✅ Algoritmo: **DQN** (decisão do dono).
+- ⬜ Conectar `paper/` ao Overleaf (passos no README do paper-template: variável `OVERLEAF_PROJECT` e segredo `OVERLEAF_TOKEN`).
