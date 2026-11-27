@@ -1,0 +1,8 @@
+# Python >= 3.10.   pip install -r run/requirements.txt
+numpy
+matplotlib
+pygame          # games/ (human play and rendering)
+pytest          # tests/
+# Quantum / classical agents (Phase 2, see docs/PLANO.md):
+# torch
+# pennylane

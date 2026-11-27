@@ -1,0 +1,63 @@
+% =====================================================================================
+% Starter manuscript. On the first Overleaf sync:
+%   - blank Overleaf project      -> this file goes to Overleaf;
+%   - Overleaf already has a draft -> the draft replaces this file (and references.bib).
+%
+% Journal class: replace the \documentclass line, for example
+%   APS (PRA, PRL, ...): \documentclass[aps,pra,twocolumn,superscriptaddress,10pt]{revtex4-2}
+%                        (put \maketitle after the abstract, use \affiliation, drop \date)
+%   Elsevier:            \documentclass[preprint,12pt]{elsarticle}
+%   Springer Nature:     use the sn-jnl template from the journal's Overleaf page
+% =====================================================================================
+\documentclass[11pt]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+
+\hypersetup{colorlinks=true, linkcolor=blue!50!black, citecolor=blue!50!black, urlcolor=blue!50!black}
+\graphicspath{{figures/}}              % figures written by run/*.py land in paper/figures/
+
+% Working notes: \showtodostrue -> \showtodosfalse hides every \TODO
+\newif\ifshowtodos \showtodostrue
+\newcommand{\TODO}[1]{\ifshowtodos\textcolor{red}{\textbf{[TODO:} #1\textbf{]}}\fi}
+
+\title{Variational quantum circuits versus classical neural networks as agents in simple games (Pong and Snake)\TODO{final title}}
+\author{Gubio G. de Lima\thanks{\TODO{affiliation}. E-mail: \texttt{gubio.gomes@estudante.ufscar.br}}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\TODO{Abstract -- write it last.}
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+Variational quantum circuits (VQCs) have been used as policies and Q-functions in reinforcement
+learning~\cite{chen2020vqc,lockwood2020rlqvc,jerbi2021pqp,skolik2022gym}, and hybrid agents have been
+tested on Atari Pong~\cite{lockwood2021atari,freinberger2024atari,wang2026entanglement}.
+Reviews: \cite{meyer2022survey,cerezo2021vqa}.
+\TODO{Gap: small, fully controlled games (Pong, Snake) with low-dimensional observations and
+3--4 discrete actions, compared at equal parameter count with a classical network.}
+
+\section{Methods}\label{sec:methods}
+\TODO{Environments (games/pong, games/snake), observation encoding, VQC ansatz with data
+re-uploading~\cite{perezsalinas2020reuploading,schuld2021encoding}, classical MLP baseline,
+DQN training~\cite{mnih2015dqn}, seeds and metrics (docs/PLANO.md).}
+
+\section{Results}\label{sec:results}
+\TODO{Learning curves (mean $\pm$ std over seeds), parameters vs.\ return, training time.}
+
+\section{Conclusions}\label{sec:conclusions}
+\TODO{}
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}
