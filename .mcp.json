@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "parallel-search": {
+      "type": "http",
+      "url": "https://search.parallel.ai/mcp"
+    }
+  }
+}

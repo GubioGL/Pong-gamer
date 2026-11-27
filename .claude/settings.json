@@ -1,0 +1,26 @@
+{
+  "model": "sonnet",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-sonnet-5-5": {
+      "effortLevel": "medium"
+    }
+  },
+  "extraKnownMarketplaces": {
+    "knowledge-work-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/knowledge-work-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "engineering@knowledge-work-plugins": true
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "parallel-search"
+  ]
+}
