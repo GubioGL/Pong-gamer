@@ -3,6 +3,21 @@
 O que mudou em cada commit, em linguagem simples, para quem acompanha o projeto.
 Mais recente em cima. Formato e regras: skill `registrar-atualizacao` (o agente `escriba` mantém este arquivo).
 
+## 2026-11-27 (2ª rodada): cobrinha, agentes quânticos e rascunho do artigo
+
+| Commit | O que mudou | Arquivos principais |
+|---|---|---|
+| (este commit) | README e este relatório atualizados. | `README.md`, `ATUALIZACOES.md` |
+| `8661220` | **Rascunho do artigo** com estrutura completa e equações. Figuras reais: os dois jogos, os dois circuitos e o custo medido por passo. Figuras de resultados **ilustrativas** (dados sintéticos, com marca d'água), mostrando a comparação que queremos fazer. | `paper/main.tex`, `run/figuras_artigo.py`, `run/medir_custo.py` |
+| `e62db01` | **Agentes de IA:** DQN único para todos, circuito variacional de **qubits**, rede quântica de **variáveis contínuas** (gaussiana) e duas redes clássicas. Tudo em PennyLane + JAX; o simulador CV foi conferido contra o PennyLane. Script de treino. | `src/rl/dqn.py`, `src/agentes/`, `run/treinar.py` |
+| `4408f0a` | **Jogo da cobrinha** jogável e como ambiente de IA (4 ações, 8 números de observação), com o mesmo visual retrô. | `games/snake/`, `cobrinha.py` |
+| `eb24548` | **Pong com visual retrô** de fliperama: fundo preto, peças brancas, placar em blocos, bipes. O fundo verde continua com `--tema campo`. | `games/retro.py`, `games/pong/play.py` |
+| `70eac76` | Pesquisa no GitHub de agentes e skills: 6 skills copiadas (PennyLane, estatística, figuras, escrita, revisão por pares, desempenho) e 4 agentes novos (RL, desempenho, estatística, revisão). | `.claude/`, `docs/agentes/FONTES-EXTERNAS.md` |
+
+**Por quê:** ter os dois jogos e os três tipos de agente prontos para treinar, e o artigo estruturado antes dos experimentos.
+**Mudança de plano:** o backend numérico passou de PyTorch para **JAX**. O servidor do PyTorch para CPU estava bloqueado no ambiente de desenvolvimento, e o JAX instala em CPU pelo PyPI e acelera os circuitos no PennyLane.
+**Próximos passos:** revisão do `fisico-revisor` nos dois circuitos; validar que o MLP aprende num treino completo; rodar 5–10 sementes por agente; trocar as figuras ilustrativas pelas reais.
+
 ## 2026-11-27: Organização do projeto e Pong terminado
 
 | Commit | O que mudou | Arquivos principais |
