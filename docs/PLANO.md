@@ -32,7 +32,7 @@ Treinar: `python run/treinar.py --jogo pong --agente vqc cv mlp mlp_igual --seme
 - [x] **3. Agentes quânticos:** `vqc.py` (qubits) e `cvqnn.py` (variáveis contínuas; simulador JAX conferido contra o PennyLane até 1e-7). *Falta:* revisão do `fisico-revisor` antes de treinar longo.
 - [ ] **4. Experimentos:** protocolo da skill `comparar-quantico-classico` (VQC, MLP com o mesmo nº de parâmetros, MLP padrão; ≥ 5 sementes; mesmo orçamento). Dados em `data/experimentos/`, figuras em `paper/figures/`. Agente: `cientista-de-experimentos`.
 - [ ] **5. Extras (se der tempo):** policy gradient (`jerbi2021pqp`); efeito do emaranhamento (anel de CZ vs. sem CZ, `entangle=False`; como em `wang2026entanglement`); porta não gaussiana Kerr no agente CV (`killoran2019cvqnn`, exige simulador de Fock); ruído de hardware.
-- [ ] **6. Artigo:** `redator-do-artigo` → `fisico-revisor` → conferir entradas `note = {check}` do `.bib` → Overleaf.
+- [ ] **6. Artigo:** ✅ rascunho em `paper/main.tex` (estrutura, métodos, tabelas reais de parâmetros e custo, figuras reais dos jogos e circuitos, e figuras **ilustrativas** de resultados marcadas como sintéticas). Falta: resultados reais (`run/treinar.py` → figuras), `fisico-revisor`, `revisor-cientifico`, conferir entradas `note = {check}` do `.bib`, Overleaf.
 
 ## Métricas
 
@@ -40,7 +40,7 @@ Retorno por episódio (média ± desvio entre sementes) · episódios/passos at�
 
 ## Riscos
 
-- **Tempo de simulação:** medido em CPU, lote 32: VQC ~7 ms por passo de gradiente (6 qubits) e ~13 ms (8 qubits); CV ~7 ms e ~12 ms. Isso dá ~6–20 min por semente de 100 mil passos, mais ~1 min de compilação JIT.
+- **Tempo de simulação** (medido, `data/custo/custo_por_agente.csv`, CPU, lote 32): por passo de gradiente, VQC 5,9 ms (Pong) e 26,6 ms (Snake); CV 12,5 ms e 16,1 ms; MLP ~0,3 ms. Uma semente de 100 mil passos leva ~10–45 min para os quânticos, mais ~20 s de compilação JIT.
 - **Instabilidade entre sementes** (`franz2022instab`): por isso várias sementes e desvio-padrão nas figuras.
 - **Barren plateaus** (`mcclean2018barren`): poucas camadas, inicialização pequena.
 - **Episódios longos no Pong:** agentes que não erram fazem ralis enormes; nos treinos usar `points_to_win` baixo e `max_steps` curto.

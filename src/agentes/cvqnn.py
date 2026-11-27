@@ -142,6 +142,8 @@ class CVQNet:
                     qml.Rotation(lam[layer, i] * x[i], wires=i)
                 for j in range(n - 1):
                     qml.Beamsplitter(bs[layer, j, 0], bs[layer, j, 1], wires=[j, j + 1])
+            if mode is None:                               # drawing only: all read-outs
+                return [qml.expval(qml.NumberOperator(i)) for i in range(n)]
             return qml.expval(qml.NumberOperator(mode))   # device allows one measurement
 
         return circuit
@@ -156,4 +158,5 @@ class CVQNet:
         import numpy as np
         x = np.zeros(self.n_modes) if x is None else x
         p = {k: np.asarray(v) for k, v in params.items()}
-        return qml.draw_mpl(self.reference_qnode(), **kw)(x, p["squeeze"], p["disp"], p["bs"], p["lam"])
+        return qml.draw_mpl(self.reference_qnode(), **kw)(x, p["squeeze"], p["disp"], p["bs"], p["lam"],
+                                                          mode=None)

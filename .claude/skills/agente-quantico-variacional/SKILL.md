@@ -24,7 +24,7 @@ Interface comum (lida pelo `src/rl/dqn.py`): `init(key)`, `apply(params, obs) ->
 - DQN idêntico para todos (`src/rl/dqn.py`, configurações em `src/experimentos.py`).
 - `lr` para os parâmetros do circuito; `lr_out` (maior, ~10×) para w e b (Skolik et al. usam taxas separadas: conferir os valores no artigo).
 - Conte parâmetros com `rl.dqn.count_parameters(params)`; o `mlp_igual` é ajustado ao nº de parâmetros do VQC.
-- A primeira chamada compila (~1 min). Depois ~7 ms por passo de gradiente (6 qubits, lote 32, CPU).
+- A primeira chamada compila (~15–25 s). Custo medido por passo: `data/custo/custo_por_agente.csv` (`run/medir_custo.py`).
 
 ## Cuidados
 - Barren plateaus (`mcclean2018barren`): poucas camadas, inicialização pequena.

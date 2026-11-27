@@ -1,0 +1,9 @@
+game,agent,parameters,step_ms,compile_s,batch,cpu
+pong,mlp,4803,0.332,0.4,32,x86_64
+pong,mlp_igual,93,0.208,0.3,32,x86_64
+pong,vqc,90,5.878,15.5,32,x86_64
+pong,cv,166,12.48,15.4,32,x86_64
+snake,mlp,4996,0.341,0.5,32,x86_64
+snake,mlp_igual,121,0.299,0.3,32,x86_64
+snake,vqc,120,26.598,25.9,32,x86_64
+snake,cv,224,16.131,23.0,32,x86_64

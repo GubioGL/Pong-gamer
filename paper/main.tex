@@ -26,8 +26,12 @@
 % Working notes: \showtodostrue -> \showtodosfalse hides every \TODO
 \newif\ifshowtodos \showtodostrue
 \newcommand{\TODO}[1]{\ifshowtodos\textcolor{red}{\textbf{[TODO:} #1\textbf{]}}\fi}
+% Placeholder for a number that will come from data/experimentos/ (never type a result by hand)
+\newcommand{\RES}[1]{\textcolor{orange!80!black}{\textbf{[#1]}}}
+\newcommand{\ket}[1]{\lvert #1 \rangle}
+\newcommand{\expval}[1]{\langle #1 \rangle}
 
-\title{Variational quantum circuits versus classical neural networks as agents in simple games (Pong and Snake)\TODO{final title}}
+\title{Qubit and continuous-variable quantum agents versus classical neural networks in Pong and Snake\TODO{final title}}
 \author{Gubio G. de Lima\thanks{\TODO{affiliation}. E-mail: \texttt{gubio.gomes@estudante.ufscar.br}}}
 \date{\today}
 
@@ -35,27 +39,294 @@
 \maketitle
 
 \begin{abstract}
-\TODO{Abstract -- write it last.}
+% DRAFT. Orange [brackets] = numbers that will come from data/experimentos/.
+We compare three kinds of function approximators as deep Q-learning agents in two simple games
+with a few discrete commands: Pong (stay, up, down) and Snake (up, down, left, right).
+The agents are a discrete-variable variational quantum circuit (VQC) on qubits, a Gaussian
+continuous-variable quantum neural network (CV QNN) on optical modes, and classical multilayer
+perceptrons, one of them with the same number of trainable parameters as the VQC.
+All models are implemented in PennyLane~\cite{bergholm2018pennylane} and trained by the same Double DQN code, the same
+budget of environment steps and \RES{10} random seeds.
+The game states are low dimensional (6 numbers in Pong, 8 in Snake), so each number is
+encoded in one qubit or one optical mode and the agents are fully quantum except for a linear
+output scale.
+\TODO{Main result in one sentence per game, with mean $\pm$ CI. Cost: time per step.}
+Code, environments and data are open.
 \end{abstract}
 
+% =====================================================================================
 \section{Introduction}\label{sec:intro}
-Variational quantum circuits (VQCs) have been used as policies and Q-functions in reinforcement
-learning~\cite{chen2020vqc,lockwood2020rlqvc,jerbi2021pqp,skolik2022gym}, and hybrid agents have been
-tested on Atari Pong~\cite{lockwood2021atari,freinberger2024atari,wang2026entanglement}.
-Reviews: \cite{meyer2022survey,cerezo2021vqa}.
-\TODO{Gap: small, fully controlled games (Pong, Snake) with low-dimensional observations and
-3--4 discrete actions, compared at equal parameter count with a classical network.}
 
-\section{Methods}\label{sec:methods}
-\TODO{Environments (games/pong, games/snake), observation encoding, VQC ansatz with data
-re-uploading~\cite{perezsalinas2020reuploading,schuld2021encoding}, classical MLP baseline,
-DQN training~\cite{mnih2015dqn}, seeds and metrics (docs/PLANO.md).}
+Reinforcement learning (RL) agents learn by trial and error, and in deep RL a neural network
+approximates the value of each action~\cite{mnih2013atari,mnih2015dqn}.
+Variational quantum circuits---parametrized circuits trained by a classical
+optimizer~\cite{cerezo2021vqa}---can take the place of that network.
+They have been used as Q-functions and policies in standard benchmarks such as CartPole and
+FrozenLake~\cite{chen2020vqc,lockwood2020rlqvc,skolik2022gym,jerbi2021pqp}, often reaching
+classical performance with fewer parameters, although results depend strongly on the
+baseline and the random seed~\cite{franz2022instab,meyer2022survey}.
 
-\section{Results}\label{sec:results}
-\TODO{Learning curves (mean $\pm$ std over seeds), parameters vs.\ return, training time.}
+Games are a natural next test. Atari Pong has been attempted with hybrid agents in which a
+classical network compresses the screen pixels before a small circuit:
+the first attempt did not learn~\cite{lockwood2021atari}, a later model matched the classical
+score~\cite{freinberger2024atari}, and entangling circuits outperformed separable ones of the
+same size in a competitive Pong setting~\cite{wang2026entanglement}.
+In these works the classical encoder does much of the work, which makes it hard to tell what
+the quantum part contributes. Continuous-variable (photonic) agents, the other main model of
+quantum computation~\cite{killoran2019cvqnn,weedbrook2012gaussian}, have been tested on
+CartPole~\cite{nagy2021photonic} and in latent observation spaces next to qubit
+agents~\cite{nagy2024latent}, but not, to our knowledge, in games.
+We also found no work on quantum agents in Snake.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item Two open game environments, Pong and Snake, with small state vectors and 3--4 discrete
+        actions, playable by humans and usable by agents (Sec.~\ref{sec:envs}).
+  \item A like-for-like comparison of a qubit VQC, a Gaussian CV QNN and classical MLPs, all
+        trained by one shared DQN implementation, with parameter-matched baselines and multiple
+        seeds (Secs.~\ref{sec:agents} and~\ref{sec:protocol}).
+  \item A batched JAX simulator of the Gaussian CV circuit, verified against PennyLane's
+        \texttt{default.gaussian} device, which makes CV agents fast enough to train with
+        DQN (Sec.~\ref{sec:cv}).
+\end{enumerate}
+
+Note on terms: ``quantum games'' usually means games about quantum physics or game theory
+with quantum strategies~\cite{meyer1999strategies,eisert1999games,piispanen2023history,piispanen2022defining}.
+Here the games are classical and only the agents are quantum.
+
+% =====================================================================================
+\section{Related work}\label{sec:related}
+
+\paragraph{Variational quantum reinforcement learning.}
+Chen~\textit{et al.}~\cite{chen2020vqc} introduced experience replay and target networks for
+VQC Q-functions. Skolik~\textit{et al.}~\cite{skolik2022gym} showed that data re-uploading
+and trainable input and output scaling are key for Q-learning with circuits, and
+Jerbi~\textit{et al.}~\cite{jerbi2021pqp} did the same for policy gradients and proved a
+learning separation for specially constructed tasks. Recurrent~\cite{chen2023qrnn},
+evolutionary~\cite{chen2022evo} and policy-gradient~\cite{sequeira2023pg} variants followed;
+\cite{meyer2022survey} reviews the field.
+
+\paragraph{Games.}
+\TODO{Expand: \cite{lockwood2021atari,freinberger2024atari,wang2026entanglement} (Pong from pixels),
+\cite{maze2023hqnn,chen2022evo} (grid worlds, closest to Snake), classical Snake agents~\cite{wei2018snake}.}
+
+\paragraph{Continuous variables.}
+Killoran~\textit{et al.}~\cite{killoran2019cvqnn} mapped a neural-network layer to Gaussian
+gates (affine part) followed by a non-Gaussian Kerr gate (activation).
+\TODO{\cite{nagy2021photonic,nagy2024latent}: photonic PPO agents, comparison with qubits.}
+
+\paragraph{Fair comparisons.}
+Parameter-matched baselines~\cite{lockwood2020rlqvc}, many seeds and reporting of
+variance~\cite{franz2022instab}, and the warning that hyperparameters matter more than parameter
+count~\cite{skolik2022gym} shape our protocol.
+
+% =====================================================================================
+\section{Environments}\label{sec:envs}
+
+Both games are pure Python, deterministic given a seed, and follow the
+\texttt{reset}/\texttt{step} interface of Gymnasium~\cite{towers2024gymnasium}
+(Fig.~\ref{fig:games}, Table~\ref{tab:envs}). The same code drives the human-playable window.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig_jogos.pdf}
+  \caption{The two environments as rendered by \texttt{games/pong/play.py} and
+  \texttt{games/snake/play.py}. Agents see only the state vectors listed below each panel.}
+  \label{fig:games}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \caption{Observations, actions and rewards. All observations are scaled to $[-1,1]$.}
+  \label{tab:envs}
+  \begin{tabular}{lll}
+    \toprule
+     & Pong & Snake ($12\times12$ grid) \\
+    \midrule
+    observation & ball $x,y,v_x,v_y$; player and CPU paddle $y$ (6) & food $\Delta x,\Delta y$; danger in 4 directions; heading (8) \\
+    actions & stay, up, down (3) & up, down, left, right (4) \\
+    reward & $+1$ point won, $-1$ point lost, $+0.1$ per return & $+1$ food, $-1$ death, $-0.01$ per step \\
+    episode end & first to 3 points, or 5000 steps & death, or 200 steps without food \\
+    opponent & rule-based CPU paddle (slower than the player) & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Two rule-based policies provide reference scores: in Pong, a paddle that follows the ball;
+in Snake, a greedy walk to the food that avoids immediate danger, which eats
+\RES{22.8} items per game on average (30 games), against \RES{0.2} for random actions.
+\TODO{Report these reference scores from a script in run/, not by hand.}
+
+% =====================================================================================
+\section{Agents}\label{sec:agents}
+
+All agents map an observation $\bm{x}\in[-1,1]^n$ to a vector of Q-values, one per action,
+and are trained by the same algorithm (Sec.~\ref{sec:dqn}). Table~\ref{tab:params} lists their sizes.
+
+\subsection{Qubit variational circuit}\label{sec:vqc}
+Following~\cite{skolik2022gym}, we use one qubit per observation component, $n=6$ (Pong) or 8 (Snake),
+and $L$ re-uploading layers~\cite{perezsalinas2020reuploading}:
+\begin{equation}
+  U(\bm{x};\bm\theta,\bm\lambda) = W(\bm\theta_L)\prod_{\ell=0}^{L-1} S(\bm\lambda_\ell \odot \bm{x})\, W(\bm\theta_\ell),
+  \qquad S(\bm{z}) = \bigotimes_i R_X(z_i),
+\end{equation}
+where $W(\bm\theta)$ applies $R_Y R_Z$ to every qubit followed by a ring of CZ gates
+(Fig.~\ref{fig:circuits}a). The input scales start at $\lambda=\pi/2$. The Q-value of action $a$ is
+\begin{equation}
+  Q(\bm{x},a) = w_a \expval{Z_{2a} Z_{2a+1}}_{U(\bm x)\ket{0}} + b_a ,
+\end{equation}
+with trainable $w_a$ and $b_a$, since $\expval{ZZ}\in[-1,1]$ while returns are not bounded by 1.
+The circuit runs on PennyLane's \texttt{default.qubit} simulator with backpropagation through JAX.
+
+\subsection{Gaussian continuous-variable network}\label{sec:cv}
+Each observation component is assigned to one optical mode, initially in the vacuum.
+Each of the $L$ layers applies, on every mode $i$, a trainable squeezing $S(r_i,\phi_i)$ and
+displacement $D(\alpha_i)$, then a data-dependent phase rotation $R(\lambda_i x_i)$, and finally a
+chain of trainable beamsplitters between neighboring modes (Fig.~\ref{fig:circuits}b).
+The read-out is a photon-number difference,
+\begin{equation}
+  Q(\bm{x},a) = w_a\left(\expval{\hat n_{2a}} - \expval{\hat n_{2a+1}}\right) + b_a .
+\end{equation}
+All gates are Gaussian, so the state stays Gaussian and is described by a mean vector $\bm\mu$ and
+covariance matrix $V$~\cite{weedbrook2012gaussian}. A gate with symplectic matrix $M$ maps
+$\bm\mu\to M\bm\mu$ and $V\to MVM^{\mathsf T}$, a displacement shifts $\bm\mu$, and
+\begin{equation}
+  \expval{\hat n_i} = \frac{V_{x_ix_i}+V_{p_ip_i}+\mu_{x_i}^2+\mu_{p_i}^2}{2\hbar}-\frac12 ,\qquad \hbar=2 .
+\end{equation}
+Because the data enter as phases and are re-uploaded, $Q$ is a nonlinear, trigonometric function of
+$\bm{x}$ even without non-Gaussian gates. Adding a Kerr gate, as in the CV QNN
+of~\cite{killoran2019cvqnn}, would require a Fock-space simulator and is left for future work.
+
+The circuit is defined in PennyLane on the \texttt{default.gaussian} device. That device evaluates
+one state at a time and uses parameter-shift gradients, which is too slow inside DQN, so training uses
+an equivalent batched JAX implementation of the same covariance-matrix update. The two agree to
+$\sim\!10^{-7}$ in $\expval{\hat n_i}$ (unit test \texttt{tests/test\_agentes.py}).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig_circuito_qubits.pdf}\\[2pt]
+  {\small (a) qubit VQC, one layer, 6 qubits (Pong)}\\[6pt]
+  \includegraphics[width=0.85\linewidth]{fig_circuito_cv.pdf}\\[2pt]
+  {\small (b) Gaussian CV QNN, one layer, 6 modes (Pong): S squeezing, D displacement, R data rotation, BS beamsplitter}
+  \caption{Circuits drawn by PennyLane from the code in \texttt{src/agentes/}. The experiments use
+  $L=4$ layers; the last panel column shows the measurements.}
+  \label{fig:circuits}
+\end{figure}
+
+\subsection{Classical baselines}
+Two ReLU MLPs: a standard $2\times64$ network, and a one-hidden-layer network whose width is chosen
+so that its parameter count matches the VQC (Table~\ref{tab:params}).
+
+\begin{table}[t]
+  \centering
+  \caption{Trainable parameters ($L=4$) and measured time per DQN gradient step
+  (batch 32, one CPU core, \texttt{data/custo/custo\_por\_agente.csv}).}
+  \label{tab:params}
+  \begin{tabular}{lrrrr}
+    \toprule
+     & \multicolumn{2}{c}{parameters} & \multicolumn{2}{c}{ms / gradient step} \\
+     agent & Pong & Snake & Pong & Snake \\
+    \midrule
+    MLP $2\times64$            & 4803 & 4996 & 0.33 & 0.34 \\
+    MLP, VQC-matched           & 93   & 121  & 0.21 & 0.30 \\
+    qubit VQC                  & 90   & 120  & 5.9  & 26.6 \\
+    Gaussian CV QNN            & 166  & 224  & 12.5 & 16.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Shared training algorithm}\label{sec:dqn}
+Double DQN~\cite{mnih2015dqn} with experience replay, a target network, Huber loss and Adam;
+hyperparameters in Table~\ref{tab:dqn}, identical for every agent. Only the output scale and
+bias ($w$, $b$) of the quantum models get a larger learning rate, following~\cite{skolik2022gym}. \TODO{Decide whether the MLPs' last layer should also get lr\_out (fairness check).}
+
+\begin{table}[t]
+  \centering
+  \caption{DQN hyperparameters (\texttt{src/experimentos.py}).}
+  \label{tab:dqn}
+  \begin{tabular}{ll}
+    \toprule
+    environment steps & $10^5$ \\
+    discount $\gamma$ & 0.99 \\
+    learning rate (circuit / MLP) & $10^{-3}$ \\
+    learning rate of $w,b$ (quantum output) & $10^{-2}$ \\
+    batch / replay buffer & 32 / $2\times10^4$ \\
+    warm-up (random actions) & $10^3$ steps \\
+    target network update & every 500 gradient steps \\
+    $\varepsilon$-greedy & $1\to0.05$, linear over $4\times10^4$ steps \\
+    gradient clipping & global norm 10 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =====================================================================================
+\section{Experimental protocol}\label{sec:protocol}
+
+Each agent is trained with \RES{10} seeds per game; a seed fixes the environment, the initialization
+and the replay sampling. We record the return of every training episode and, every \RES{5000} steps,
+the mean return of the greedy policy over 5 fresh episodes. We report mean $\pm$ 95\% bootstrap
+confidence intervals, steps to reach a threshold (\RES{Pong: +1; Snake: 10 food}), and compare each
+quantum agent with the parameter-matched MLP with a Mann--Whitney test.
+Figure~\ref{fig:cost} shows the cost side, which is a real measurement: simulated quantum agents
+are 20--90 times slower per step than MLPs of the same size on a CPU.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig_custo.pdf}
+  \caption{Measured cost: trainable parameters (left) and wall-clock time per DQN gradient step on
+  a CPU simulator (right). Log scales. Produced by \texttt{run/medir\_custo.py}.}
+  \label{fig:cost}
+\end{figure}
+
+% =====================================================================================
+\section{Results (planned)}\label{sec:results}
+
+\textbf{This section is a plan. Figures~\ref{fig:curves} and~\ref{fig:params} contain synthetic
+curves that only show the layout of the comparison; they are not results.}
+They will be regenerated from \texttt{data/experimentos/} once the runs are done.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig_curvas_ilustrativa.pdf}
+  \caption{\textbf{Illustrative, synthetic data.} Planned figure: learning curves (mean $\pm$ std over
+  seeds) of the four agents in Pong (a) and Snake (b). The shapes follow what earlier
+  studies suggest~\cite{skolik2022gym,franz2022instab,nagy2021photonic}: small quantum models close to a
+  classical model of the same size, with a larger spread between seeds.}
+  \label{fig:curves}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig_parametros_ilustrativa.pdf}
+  \caption{\textbf{Illustrative, synthetic data.} Planned figure: final greedy return versus number of
+  trainable parameters. The question it answers: at equal size, do quantum agents do better or worse
+  than classical ones?}
+  \label{fig:params}
+\end{figure}
+
+Questions the results should answer:
+\begin{enumerate}
+  \item[Q1] At equal parameter count, does the qubit VQC learn Pong and Snake as well as the matched MLP?
+  \item[Q2] Does the Gaussian CV QNN learn at all, and how does it compare with the qubit VQC?
+  \item[Q3] How much larger is the spread between seeds for the quantum agents?
+  \item[Q4] How do the gaps change from Pong (3 actions, continuous dynamics) to Snake (4 actions, grid)?
+\end{enumerate}
+Planned ablations: no entanglement (VQC without CZ, as in~\cite{wang2026entanglement});
+number of layers $L\in\{1,2,4,6\}$ (deeper circuits risk barren plateaus~\cite{mcclean2018barren}); CV agent with a Kerr gate.
+
+% =====================================================================================
+\section{Discussion}\label{sec:discussion}
+\TODO{After results. Points to cover: what ``comparable'' means given the confidence intervals; cost
+on simulators versus hardware; the observations are hand-designed and low dimensional, so the
+results say nothing about learning from pixels; no hardware noise; no claim of quantum advantage
+(see~\cite{meyer2022survey}).}
 
 \section{Conclusions}\label{sec:conclusions}
 \TODO{}
+
+\paragraph{Code and data availability.}
+Environments, agents, training scripts and the data behind every figure:
+\TODO{repository URL / Zenodo DOI}. Figures are regenerated by \texttt{run/figuras\_artigo.py}.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
