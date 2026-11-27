@@ -29,6 +29,7 @@
 % Placeholder for a number that will come from data/experimentos/ (never type a result by hand)
 \newcommand{\RES}[1]{\textcolor{orange!80!black}{\textbf{[#1]}}}
 \newcommand{\ket}[1]{\lvert #1 \rangle}
+\newcommand{\bra}[1]{\langle #1 \rvert}
 \newcommand{\expval}[1]{\langle #1 \rangle}
 
 \title{Qubit and continuous-variable quantum agents versus classical neural networks in Pong and Snake\TODO{final title}}
@@ -42,14 +43,16 @@
 % DRAFT. Orange [brackets] = numbers that will come from data/experimentos/.
 We compare three kinds of function approximators as deep Q-learning agents in two simple games
 with a few discrete commands: Pong (stay, up, down) and Snake (up, down, left, right).
-The agents are a discrete-variable variational quantum circuit (VQC) on qubits, a Gaussian
-continuous-variable quantum neural network (CV QNN) on optical modes, and classical multilayer
-perceptrons, one of them with the same number of trainable parameters as the VQC.
-All models are implemented in PennyLane~\cite{bergholm2018pennylane} and trained by the same Double DQN code, the same
+The agents are a discrete-variable variational quantum circuit (VQC) on qubits, a continuous-variable
+quantum neural network (CV QNN) with Kerr non-linearities on optical modes, a Gaussian-only CV network
+as an ablation, and classical multilayer perceptrons, one of them with the same number of trainable
+parameters as the VQC.
+All models are defined with PennyLane~\cite{bergholm2018pennylane} and trained by the same Double DQN code, the same
 budget of environment steps and \RES{10} random seeds.
 The game states are low dimensional (6 numbers in Pong, 8 in Snake), so each number is
-encoded in one qubit or one optical mode and the agents are fully quantum except for a linear
-output scale.
+encoded in one qubit, or two numbers in one optical mode, and the agents are fully quantum except for a
+linear output scale. The CV network is simulated in the Fock basis by \texttt{cvjax}, a small JAX library
+we wrote because PennyLane no longer has a working Fock device for this template.
 \TODO{Main result in one sentence per game, with mean $\pm$ CI. Cost: time per step.}
 Code, environments and data are open.
 \end{abstract}
@@ -82,12 +85,12 @@ We also found no work on quantum agents in Snake.
 \begin{enumerate}
   \item Two open game environments, Pong and Snake, with small state vectors and 3--4 discrete
         actions, playable by humans and usable by agents (Sec.~\ref{sec:envs}).
-  \item A like-for-like comparison of a qubit VQC, a Gaussian CV QNN and classical MLPs, all
-        trained by one shared DQN implementation, with parameter-matched baselines and multiple
-        seeds (Secs.~\ref{sec:agents} and~\ref{sec:protocol}).
-  \item A batched JAX simulator of the Gaussian CV circuit, verified against PennyLane's
-        \texttt{default.gaussian} device, which makes CV agents fast enough to train with
-        DQN (Sec.~\ref{sec:cv}).
+  \item A like-for-like comparison of a qubit VQC, a CV QNN with Kerr gates, a Gaussian CV ablation and
+        classical MLPs, all trained by one shared DQN implementation, with parameter-matched baselines
+        and multiple seeds (Secs.~\ref{sec:agents}, \ref{sec:dqn} and~\ref{sec:protocol}).
+  \item \texttt{cvjax}, an open JAX implementation of PennyLane's \texttt{CVNeuralNetLayers} in the Fock
+        basis with exact gate matrix elements, verified against PennyLane and The Walrus
+        (Sec.~\ref{sec:cv}).
 \end{enumerate}
 
 Note on terms: ``quantum games'' usually means games about quantum physics or game theory
@@ -113,6 +116,8 @@ evolutionary~\cite{chen2022evo} and policy-gradient~\cite{sequeira2023pg} varian
 \paragraph{Continuous variables.}
 Killoran~\textit{et al.}~\cite{killoran2019cvqnn} mapped a neural-network layer to Gaussian
 gates (affine part) followed by a non-Gaussian Kerr gate (activation).
+Our single-mode regression study~\cite{delima2026regression} used this layer to fit functions and found
+large gains for smooth targets but not for discontinuous ones.
 \TODO{\cite{nagy2021photonic,nagy2024latent}: photonic PPO agents, comparison with qubits.}
 
 \paragraph{Fair comparisons.}
@@ -158,95 +163,181 @@ in Snake, a greedy walk to the food that avoids immediate danger, which eats
 \TODO{Report these reference scores from a script in run/, not by hand.}
 
 % =====================================================================================
-\section{Agents}\label{sec:agents}
+\section{Agents: inputs, outputs and circuits}\label{sec:agents}
 
-All agents map an observation $\bm{x}\in[-1,1]^n$ to a vector of Q-values, one per action,
-and are trained by the same algorithm (Sec.~\ref{sec:dqn}). Table~\ref{tab:params} lists their sizes.
+Every agent is a function approximator for the action-value function: it receives the game state
+$\bm{x}\in[-1,1]^n$ ($n=6$ in Pong, $n=8$ in Snake) and returns one real number per action,
+$Q(\bm{x},a)$, $a=1,\dots,|\mathcal A|$ ($|\mathcal A|=3$ in Pong, 4 in Snake).
+The game never sees which model is used: it only receives the action chosen from these numbers
+(Fig.~\ref{fig:pipeline}). Table~\ref{tab:io} summarizes what enters and leaves each model, and
+Table~\ref{tab:params} their sizes and cost.
 
-\subsection{Qubit variational circuit}\label{sec:vqc}
-Following~\cite{skolik2022gym}, we use one qubit per observation component, $n=6$ (Pong) or 8 (Snake),
-and $L$ re-uploading layers~\cite{perezsalinas2020reuploading}:
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig_fluxo.pdf}
+  \caption{How a game and an agent are connected. At every frame the game returns a state vector
+  $\bm x$; the Q-network (classical or quantum) encodes it, is evaluated, and a measured observable per
+  action gives $Q(\bm x,a)$; an $\varepsilon$-greedy rule picks the command sent back to the game.
+  Transitions go to a replay buffer, from which mini-batches train the network with the same Double-DQN
+  update for every model (Sec.~\ref{sec:dqn}).}
+  \label{fig:pipeline}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \caption{Input and output of each Q-network. $n$ = observation size, $M$ = number of modes.}
+  \label{tab:io}
+  \small
+  \begin{tabular}{p{2.6cm}p{4.3cm}p{3.0cm}p{3.6cm}}
+    \toprule
+    agent & input (encoding of $\bm x$) & quantum register & output $Q(\bm x,a)$ \\
+    \midrule
+    MLP & $\bm x$ fed to dense ReLU layers & --- & last linear layer, one unit per action \\
+    qubit VQC & $R_X(\lambda_{\ell i}x_i)$ on qubit $i$, re-uploaded in each of the $L$ layers & $n$ qubits & $w_a\expval{Z_{2a}Z_{2a+1}}+b_a$ \\
+    CV QNN (Kerr) & $D(\alpha_i)$, $\alpha_i=s_{2i}x_{2i}+i\,s_{2i+1}x_{2i+1}$, once on the vacuum & $M=n/2$ optical modes, Fock cutoff $D_c=6$ & $w_a\expval{\hat x_a}+b_a$ (homodyne mean of mode $a$) \\
+    CV Gaussian & $R(\lambda_{\ell i}x_i)$ on mode $i$, re-uploaded & $n$ modes (Gaussian state) & $w_a(\expval{\hat n_{2a}}-\expval{\hat n_{2a+1}})+b_a$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \caption{Trainable parameters ($L=4$) and measured time per DQN gradient step (batch 32, one CPU,
+  simulators), from \texttt{data/custo/custo\_por\_agente.csv}.}
+  \label{tab:params}
+  \input{tab_custo.tex}
+\end{table}
+
+\subsection{Discrete variables: qubit variational circuit}\label{sec:vqc}
+Following~\cite{skolik2022gym}, each observation component is assigned to one qubit and the circuit
+alternates trainable layers and data-encoding layers (data re-uploading~\cite{perezsalinas2020reuploading}):
 \begin{equation}
-  U(\bm{x};\bm\theta,\bm\lambda) = W(\bm\theta_L)\prod_{\ell=0}^{L-1} S(\bm\lambda_\ell \odot \bm{x})\, W(\bm\theta_\ell),
+  \ket{\psi(\bm{x})} = W(\bm\theta_L)\prod_{\ell=0}^{L-1} S(\bm\lambda_\ell \odot \bm{x})\, W(\bm\theta_\ell)\,\ket{0}^{\otimes n},
   \qquad S(\bm{z}) = \bigotimes_i R_X(z_i),
 \end{equation}
 where $W(\bm\theta)$ applies $R_Y R_Z$ to every qubit followed by a ring of CZ gates
-(Fig.~\ref{fig:circuits}a). The input scales start at $\lambda=\pi/2$. The Q-value of action $a$ is
-\begin{equation}
-  Q(\bm{x},a) = w_a \expval{Z_{2a} Z_{2a+1}}_{U(\bm x)\ket{0}} + b_a ,
-\end{equation}
-with trainable $w_a$ and $b_a$, since $\expval{ZZ}\in[-1,1]$ while returns are not bounded by 1.
-The circuit runs on PennyLane's \texttt{default.qubit} simulator with backpropagation through JAX.
+(Fig.~\ref{fig:circuits}a). The input scales start at $\lambda=\pi/2$, so $x\in[-1,1]$ maps to
+$[-\pi/2,\pi/2]$. One pair of qubits is read per action:
+$Q(\bm{x},a) = w_a \expval{Z_{2a} Z_{2a+1}} + b_a$, with trainable $w_a,b_a$ because
+$\expval{ZZ}\in[-1,1]$ while returns are not bounded by one.
+Simulation: PennyLane \texttt{default.qubit}~\cite{bergholm2018pennylane} with backpropagation through JAX~\cite{jax2018github}.
 
-\subsection{Gaussian continuous-variable network}\label{sec:cv}
-Each observation component is assigned to one optical mode, initially in the vacuum.
-Each of the $L$ layers applies, on every mode $i$, a trainable squeezing $S(r_i,\phi_i)$ and
-displacement $D(\alpha_i)$, then a data-dependent phase rotation $R(\lambda_i x_i)$, and finally a
-chain of trainable beamsplitters between neighboring modes (Fig.~\ref{fig:circuits}b).
-The read-out is a photon-number difference,
+\subsection{Continuous variables: CV quantum neural network with Kerr gates}\label{sec:cv}
+The CV agent is the quantum neural network of Killoran \textit{et al.}~\cite{killoran2019cvqnn}, in the
+form of PennyLane's \texttt{CVNeuralNetLayers} template. With $M$ optical modes, one layer is
 \begin{equation}
-  Q(\bm{x},a) = w_a\left(\expval{\hat n_{2a}} - \expval{\hat n_{2a+1}}\right) + b_a .
+  \mathcal L = \prod_i K(k_i)\;\prod_i D(a_i e^{i\phi_{a,i}})\;\; U_2(\bm\theta_2,\bm\phi_2,\bm\varphi_2)\;\prod_i S(r_i,\phi_{r,i})\;\; U_1(\bm\theta_1,\bm\phi_1,\bm\varphi_1),
 \end{equation}
-All gates are Gaussian, so the state stays Gaussian and is described by a mean vector $\bm\mu$ and
-covariance matrix $V$~\cite{weedbrook2012gaussian}. A gate with symplectic matrix $M$ maps
-$\bm\mu\to M\bm\mu$ and $V\to MVM^{\mathsf T}$, a displacement shifts $\bm\mu$, and
-\begin{equation}
-  \expval{\hat n_i} = \frac{V_{x_ix_i}+V_{p_ip_i}+\mu_{x_i}^2+\mu_{p_i}^2}{2\hbar}-\frac12 ,\qquad \hbar=2 .
-\end{equation}
-Because the data enter as phases and are re-uploaded, $Q$ is a nonlinear, trigonometric function of
-$\bm{x}$ even without non-Gaussian gates. Adding a Kerr gate, as in the CV QNN
-of~\cite{killoran2019cvqnn}, would require a Fock-space simulator and is left for future work.
+where $U_{1,2}$ are interferometers (a rectangular mesh of $M(M-1)/2$ beamsplitters followed by
+rotations), $S$ squeezing, $D$ displacement and $K(k)=e^{ik\hat n^2}$ the Kerr gate. The interferometers,
+squeezers and displacements are Gaussian and act as the affine part of a neural layer; the Kerr gate is
+non-Gaussian and plays the role of the activation function~\cite{killoran2019cvqnn}.
 
-The circuit is defined in PennyLane on the \texttt{default.gaussian} device. That device evaluates
-one state at a time and uses parameter-shift gradients, which is too slow inside DQN, so training uses
-an equivalent batched JAX implementation of the same covariance-matrix update. The two agree to
-$\sim\!10^{-7}$ in $\expval{\hat n_i}$ (unit test \texttt{tests/test\_agentes.py}).
+\paragraph{Input and output.} Two observation components are encoded in one mode as the real and
+imaginary parts of a displacement of the vacuum,
+$\ket{\psi_0(\bm x)}=\bigotimes_{i=0}^{M-1} D(\alpha_i)\ket{0}$ with
+$\alpha_i=s_{2i}x_{2i}+i\,s_{2i+1}x_{2i+1}$ and trainable scales $s$ (initially 0.5), so $M=n/2$: three modes in
+Pong and four in Snake, which is also one mode per action. After $L$ layers each mode is read by its
+homodyne mean,
+\begin{equation}
+  Q(\bm{x},a) = w_a\,\bra{\psi_L(\bm x)}\hat x_a\ket{\psi_L(\bm x)} + b_a,\qquad \hat x=\sqrt{\hbar/2}\,(\hat a+\hat a^\dagger),\ \hbar=2 .
+\end{equation}
+This mirrors the single-mode regression network of~\cite{delima2026regression}, where the input is
+$D(x)\ket{0}$, a layer is $R\,S\,R\,D\,K$ (the one-mode case of $\mathcal L$, whose interferometers are
+rotations) and the output is $\expval{\hat a+\hat a^\dagger}$.
+
+\paragraph{Simulation.} The Kerr gate makes the state non-Gaussian, so it is simulated as a vector of
+$D_c^M$ amplitudes in the Fock basis truncated at $D_c=6$ photons per mode. PennyLane's only Fock
+device for this template, \texttt{strawberryfields.fock}, requires PennyLane $<0.30$, and the
+\texttt{default.gaussian} device does not accept Kerr gates. We therefore wrote \texttt{cvjax}, a small
+JAX library (in \texttt{libs/cvjax}) inspired by Strawberry Fields~\cite{killoran2019sf} and by the
+CV-QuForge and QuIara simulators of T.~de~S.~Farias and A.~C.~Ricardo. It applies each gate along the
+axis of its mode(s) and uses the exact matrix elements of the untruncated operators: normal-ordered forms
+for $D$ and $S$ (e.g.\ $D(\alpha)=e^{-|\alpha|^2/2}e^{\alpha\hat a^\dagger}e^{-\alpha^*\hat a}$, in which no
+intermediate state crosses the cutoff) and a block decomposition by total photon number for beamsplitters.
+Its gates agree with The Walrus~\cite{gupt2019walrus} and with \texttt{expm} at large cutoff to
+$\sim\!10^{-7}$; its layers reproduce the decomposition of \texttt{qml.CVNeuralNetLayers} gate by gate; and
+with $k=0$ its moments agree with \texttt{default.gaussian} to $<\!2\times10^{-4}$ (unit tests).
+Truncation is monitored by the leakage $1-\langle\psi_L|\psi_L\rangle$, which is $\lesssim 1.4\times10^{-3}$ at
+initialization for the most extreme inputs. To keep the photon number low, the input is encoded once
+(not re-uploaded: displacements would add up) and the active parameters ($r$, $a$, $k$) start small
+($\mathcal N(0,10^{-4})$, as in the PennyLane demo~\cite{pennylane_cvqnn_demo}).
+\TODO{Decide whether to penalize leakage in the loss, and report the maximum leakage after training.}
+
+\paragraph{Gaussian ablation.} To isolate the effect of the Kerr non-linearity we also train a purely
+Gaussian network (``CV Gaussian''): one mode per observation component, squeezing and displacement on
+each mode, the data entering as re-uploaded phase rotations $R(\lambda_i x_i)$ (which add no photons),
+and a beamsplitter chain. Gaussian states are fully described by a mean vector $\bm\mu$ and covariance
+matrix $V$~\cite{weedbrook2012gaussian}; a gate with symplectic matrix $M_g$ maps $\bm\mu\to M_g\bm\mu$ and
+$V\to M_gVM_g^{\mathsf T}$, and
+$\expval{\hat n_i}=(V_{x_ix_i}+V_{p_ip_i}+\mu_{x_i}^2+\mu_{p_i}^2)/(2\hbar)-1/2$. We simulate this exactly in
+JAX and check it against \texttt{default.gaussian} ($\sim\!10^{-7}$).
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{fig_circuito_qubits.pdf}\\[2pt]
   {\small (a) qubit VQC, one layer, 6 qubits (Pong)}\\[6pt]
-  \includegraphics[width=0.85\linewidth]{fig_circuito_cv.pdf}\\[2pt]
-  {\small (b) Gaussian CV QNN, one layer, 6 modes (Pong): S squeezing, D displacement, R data rotation, BS beamsplitter}
-  \caption{Circuits drawn by PennyLane from the code in \texttt{src/agentes/}. The experiments use
-  $L=4$ layers; the last panel column shows the measurements.}
+  \includegraphics[width=\linewidth]{fig_circuito_cv.pdf}\\[2pt]
+  {\small (b) CV QNN, encoding $D(\alpha_i)$ and one \texttt{CVNeuralNetLayers} layer, 3 modes (Pong):
+  BS beamsplitter, R rotation, S squeezing, D displacement, Kerr; read-out $\expval{\hat x_a}$}
+  \caption{Circuits drawn by PennyLane from the operations executed by the agents
+  (\texttt{src/agentes/vqc.py}, \texttt{src/agentes/cvfock.py}). The experiments use $L=4$ layers.}
   \label{fig:circuits}
 \end{figure}
 
 \subsection{Classical baselines}
 Two ReLU MLPs: a standard $2\times64$ network, and a one-hidden-layer network whose width is chosen
-so that its parameter count matches the VQC (Table~\ref{tab:params}).
+so that its parameter count matches the qubit VQC (Table~\ref{tab:params}).
+
+% =====================================================================================
+\section{Training and connection to the games}\label{sec:dqn}
+
+All five agents are trained by the same Double DQN~\cite{mnih2015dqn,vanhasselt2016double} code
+(\texttt{src/rl/dqn.py}), with the hyperparameters of Table~\ref{tab:dqn}. Only the model inside the
+loop changes. One training run is one agent, one game and one random seed:
+
+\begin{enumerate}
+  \item \textbf{Act.} At environment step $t$ the game gives $\bm x_t$. With probability
+        $\varepsilon_t$ the agent takes a random command; otherwise it evaluates its Q-network once
+        (one circuit simulation for the quantum agents) and takes $a_t=\arg\max_a Q_{\bm w}(\bm x_t,a)$.
+        $\varepsilon$ decays linearly from 1 to 0.05 over the first $4\times10^4$ steps; the first $10^3$
+        steps are random.
+  \item \textbf{Store.} The game advances one frame, $(\bm x_{t+1}, r_t, d_t)=\texttt{env.step}(a_t)$, and the
+        transition $(\bm x_t,a_t,r_t,\bm x_{t+1},d_t)$ enters a replay buffer of $2\times10^4$ transitions.
+        $d_t=1$ only for a true terminal state (match won or lost, snake died); time-limit cuts are not
+        terminal, so their value is still bootstrapped.
+  \item \textbf{Learn.} After every step a mini-batch $\mathcal B$ of 32 transitions is sampled and the
+        Double-DQN target is built with a delayed copy $\bm w^-$ of the parameters (target network),
+        \begin{equation}
+          y = r + \gamma(1-d)\,Q_{\bm w^-}\!\big(\bm x',\arg\max_{a'}Q_{\bm w}(\bm x',a')\big),\qquad \gamma=0.99,
+        \end{equation}
+        and the parameters take one Adam step on the Huber loss
+        $\mathcal L(\bm w)=\frac1{|\mathcal B|}\sum_{\mathcal B}\mathrm{Huber}\big(Q_{\bm w}(\bm x,a)-y\big)$,
+        with gradient clipping at norm 10. Each step therefore needs $3\times32$ evaluations of the
+        Q-network (online at $\bm x$ and $\bm x'$, target at $\bm x'$) and the gradient of the first two.
+  \item \textbf{Sync.} Every 500 gradient steps, $\bm w^-\leftarrow\bm w$.
+\end{enumerate}
+
+\paragraph{Gradients.} On the simulators all models are differentiated by automatic differentiation
+(backpropagation through the state vector, Fock tensor or covariance matrix), which gives exact gradients.
+On hardware the same gradients would be estimated with the parameter-shift rule, at a cost of two
+circuit evaluations per parameter. \TODO{State whether we also run a shot-noise experiment.}
+The quantum output scale and bias ($w_a$, $b_a$) use a larger learning rate ($10^{-2}$) than the circuit
+parameters ($10^{-3}$), following~\cite{skolik2022gym}.
+\TODO{Decide whether the MLPs' last layer should also get the larger rate (fairness check).}
+
+\paragraph{Evaluation.} Every \RES{5000} steps the greedy policy ($\varepsilon=0$) plays 5 fresh
+episodes with seeds not used for training. The learning curve stores, per episode, the return, the number of
+steps, $\varepsilon$, the loss and the wall time (\texttt{data/experimentos/<game>/<agent>/seed\_<n>.csv},
+with all settings in a JSON file next to it).
 
 \begin{table}[t]
   \centering
-  \caption{Trainable parameters ($L=4$) and measured time per DQN gradient step
-  (batch 32, one CPU core, \texttt{data/custo/custo\_por\_agente.csv}).}
-  \label{tab:params}
-  \begin{tabular}{lrrrr}
-    \toprule
-     & \multicolumn{2}{c}{parameters} & \multicolumn{2}{c}{ms / gradient step} \\
-     agent & Pong & Snake & Pong & Snake \\
-    \midrule
-    MLP $2\times64$            & 4803 & 4996 & 0.33 & 0.34 \\
-    MLP, VQC-matched           & 93   & 121  & 0.21 & 0.30 \\
-    qubit VQC                  & 90   & 120  & 5.9  & 26.6 \\
-    Gaussian CV QNN            & 166  & 224  & 12.5 & 16.1 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\subsection{Shared training algorithm}\label{sec:dqn}
-Double DQN~\cite{mnih2015dqn} with experience replay, a target network, Huber loss and Adam;
-hyperparameters in Table~\ref{tab:dqn}, identical for every agent. Only the output scale and
-bias ($w$, $b$) of the quantum models get a larger learning rate, following~\cite{skolik2022gym}. \TODO{Decide whether the MLPs' last layer should also get lr\_out (fairness check).}
-
-\begin{table}[t]
-  \centering
-  \caption{DQN hyperparameters (\texttt{src/experimentos.py}).}
+  \caption{DQN hyperparameters (\texttt{src/experimentos.py}), identical for every agent.}
   \label{tab:dqn}
   \begin{tabular}{ll}
     \toprule
-    environment steps & $10^5$ \\
+    environment steps per run & $10^5$ \\
     discount $\gamma$ & 0.99 \\
     learning rate (circuit / MLP) & $10^{-3}$ \\
     learning rate of $w,b$ (quantum output) & $10^{-2}$ \\
@@ -255,6 +346,8 @@ bias ($w$, $b$) of the quantum models get a larger learning rate, following~\cit
     target network update & every 500 gradient steps \\
     $\varepsilon$-greedy & $1\to0.05$, linear over $4\times10^4$ steps \\
     gradient clipping & global norm 10 \\
+    layers $L$ (quantum models) & 4 \\
+    Fock cutoff (CV QNN) & 6 per mode \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -268,7 +361,8 @@ the mean return of the greedy policy over 5 fresh episodes. We report mean $\pm$
 confidence intervals, steps to reach a threshold (\RES{Pong: +1; Snake: 10 food}), and compare each
 quantum agent with the parameter-matched MLP with a Mann--Whitney test.
 Figure~\ref{fig:cost} shows the cost side, which is a real measurement: simulated quantum agents
-are 20--90 times slower per step than MLPs of the same size on a CPU.
+are one to two orders of magnitude slower per step than MLPs of the same size on a CPU, and the
+Fock-basis CV QNN is the most expensive (its state has $6^4=1296$ amplitudes in Snake).
 
 \begin{figure}[t]
   \centering
@@ -307,7 +401,8 @@ They will be regenerated from \texttt{data/experimentos/} once the runs are done
 Questions the results should answer:
 \begin{enumerate}
   \item[Q1] At equal parameter count, does the qubit VQC learn Pong and Snake as well as the matched MLP?
-  \item[Q2] Does the Gaussian CV QNN learn at all, and how does it compare with the qubit VQC?
+  \item[Q2] How does the CV QNN compare with the qubit VQC, and how much does the Kerr non-linearity add
+        over the Gaussian ablation?
   \item[Q3] How much larger is the spread between seeds for the quantum agents?
   \item[Q4] How do the gaps change from Pong (3 actions, continuous dynamics) to Snake (4 actions, grid)?
 \end{enumerate}
