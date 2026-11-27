@@ -1,0 +1,20 @@
+[project]
+name = "cvjax"
+version = "0.1.0"
+description = "Small JAX library for continuous-variable quantum neural networks in the Fock basis (CVNeuralNetLayers without a Fock device)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Gubio G. de Lima"}]
+dependencies = ["jax>=0.4", "numpy"]
+
+[project.optional-dependencies]
+test = ["pytest", "scipy", "pennylane", "thewalrus"]
+examples = ["optax"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

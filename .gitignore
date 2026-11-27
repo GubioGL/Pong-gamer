@@ -45,3 +45,4 @@ data/raw/
 *.pt
 *.pth
 .pytest_cache/
+*.egg-info/
